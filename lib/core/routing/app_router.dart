@@ -12,12 +12,16 @@ import '../../features/clinics/presentation/clinics_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/onboarding/data/onboarding_controller.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
+import '../../features/pets/presentation/pet_details_screen.dart';
+import '../../features/pets/presentation/pet_form_screen.dart';
 import '../../features/pets/presentation/pets_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
 import 'app_routes.dart';
 import 'main_shell.dart';
 import 'redirect.dart';
+
+final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   // Re-run redirects whenever auth or onboarding state changes, without
@@ -27,6 +31,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.listen(onboardingCompleteProvider, (_, _) => refresh.value++);
 
   final router = GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoutes.splash,
     refreshListenable: refresh,
     debugLogDiagnostics: kDebugMode,
@@ -64,7 +69,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state, shell) => MainShell(navigationShell: shell),
         branches: [
           _branch(AppRoutes.home, const HomeScreen()),
-          _branch(AppRoutes.pets, const PetsScreen()),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.pets,
+                builder: (context, state) => const PetsScreen(),
+                routes: [
+                  // Forms cover the bottom navigation (root navigator).
+                  GoRoute(
+                    path: 'add',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const PetFormScreen(),
+                  ),
+                  GoRoute(
+                    path: ':petId',
+                    builder: (context, state) =>
+                        PetDetailsScreen(petId: state.pathParameters['petId']!),
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        parentNavigatorKey: _rootNavigatorKey,
+                        builder: (context, state) =>
+                            PetFormScreen(petId: state.pathParameters['petId']!),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
           _branch(AppRoutes.calendar, const CalendarScreen()),
           _branch(AppRoutes.clinics, const ClinicsScreen()),
           _branch(AppRoutes.profile, const ProfileScreen()),
