@@ -51,4 +51,22 @@ abstract final class Validators {
     if (!_phone.hasMatch(digits)) return 'Enter a valid phone number';
     return null;
   }
+
+  /// Optional positive weight in kilograms (up to 200 kg).
+  static String? weight(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final kg = double.tryParse(value.trim().replaceAll(',', '.'));
+    if (kg == null) return 'Enter a number, e.g. 12.5';
+    if (kg <= 0 || kg > 200) return 'Enter a weight between 0 and 200 kg';
+    return null;
+  }
+
+  static String? notInFuture(DateTime? date, {DateTime? now}) {
+    if (date == null) return null;
+    final today = now ?? DateTime.now();
+    if (date.isAfter(DateTime(today.year, today.month, today.day, 23, 59, 59))) {
+      return 'Date cannot be in the future';
+    }
+    return null;
+  }
 }
