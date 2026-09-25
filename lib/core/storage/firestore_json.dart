@@ -6,7 +6,7 @@ import '../errors/failure.dart';
 /// replacing [Timestamp]s (including nested ones) with [DateTime]s and
 /// injecting the document id as `id`.
 Map<String, dynamic> firestoreDocToJson(DocumentSnapshot<Map<String, dynamic>> doc) {
-  final data = doc.data(serverTimestampBehavior: ServerTimestampBehavior.estimate) ?? {};
+  final data = doc.data() ?? {};
   return {..._convert(data) as Map<String, dynamic>, 'id': doc.id};
 }
 
