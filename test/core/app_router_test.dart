@@ -50,6 +50,10 @@ void main() {
       AppRoutes.homeVaccination('v1'),
       AppRoutes.homeMedication('m1'),
       AppRoutes.notificationSettings,
+      AppRoutes.documents('p1'),
+      AppRoutes.documentViewer('d1'),
+      AppRoutes.documentNew(petId: 'p1', vaccinationId: 'v1', type: 'xRay', name: 'Chest X-ray'),
+      AppRoutes.documentEdit('d1'),
     ];
 
     for (final path in paths) {
