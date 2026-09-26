@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/modern_widgets.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../pets/domain/entities/pet.dart';
 import '../../domain/entities/emergency_profile.dart';
@@ -50,26 +52,60 @@ class _Profile extends StatelessWidget {
     final phone = profile.contactPhone;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+      padding: const EdgeInsets.only(bottom: 32),
       children: [
-        Center(
-          child: CircleAvatar(
-            radius: 64,
-            backgroundColor: scheme.primaryContainer,
-            foregroundImage: profile.photoUrl == null ? null : CachedNetworkImageProvider(profile.photoUrl!),
-            child: Text(species.emoji, style: const TextStyle(fontSize: 56)),
+        GradientHeader(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.18),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  radius: 60,
+                  backgroundColor: scheme.primaryContainer,
+                  foregroundImage:
+                      profile.photoUrl == null ? null : CachedNetworkImageProvider(profile.photoUrl!),
+                  child: Text(species.emoji, style: const TextStyle(fontSize: 52)),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(profile.petName.toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineMedium
+                      ?.copyWith(color: Colors.white, fontWeight: FontWeight.w800, letterSpacing: 1)),
+              Text([profile.breed ?? species.label].join(),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium?.copyWith(color: Colors.white)),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text('PetCare ID ${profile.publicId}',
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 16),
-        Text(profile.petName.toUpperCase(),
-            textAlign: TextAlign.center,
-            style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800)),
-        Text([profile.breed ?? species.label].join(),
-            textAlign: TextAlign.center, style: theme.textTheme.titleMedium),
-        const SizedBox(height: 4),
-        Text('PetCare ID ${profile.publicId}',
-            textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
-        const SizedBox(height: 20),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
         Card(
           color: scheme.primaryContainer,
           child: Padding(
@@ -84,6 +120,12 @@ class _Profile extends StatelessWidget {
         if (phone != null) ...[
           const SizedBox(height: 16),
           FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: FeatureAccent.vaccinations.color,
+              shadowColor: FeatureAccent.vaccinations.color.withValues(alpha: 0.5),
+              minimumSize: const Size.fromHeight(60),
+              textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
             onPressed: () => launchUrl(Uri(scheme: 'tel', path: phone.replaceAll(RegExp(r'[^\d+]'), ''))),
             icon: const Icon(Icons.call),
             label: Text(profile.contactName == null ? 'Call owner' : 'Call ${profile.contactName}'),
@@ -123,6 +165,9 @@ class _Profile extends StatelessWidget {
             ),
           ),
         ],
+            ],
+          ),
+        ),
       ],
     );
   }

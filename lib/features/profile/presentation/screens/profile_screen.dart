@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_mode_controller.dart';
+import '../../../../core/widgets/modern_widgets.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../../notifications/presentation/controllers/reminder_sync_controller.dart';
 
@@ -17,58 +19,138 @@ class ProfileScreen extends ConsumerWidget {
     final user = ref.watch(authStateProvider).value;
     final themeMode = ref.watch(themeModeProvider);
     final theme = Theme.of(context);
+    final name = user?.displayName ?? 'PetCare user';
+    final initials = name
+        .split(RegExp(r'\s+'))
+        .where((p) => p.isNotEmpty)
+        .take(2)
+        .map((p) => p[0].toUpperCase())
+        .join();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
       body: ListView(
-        padding: const EdgeInsets.all(AppConstants.pagePadding),
+        padding: const EdgeInsets.only(bottom: 32),
         children: [
-          Card(
-            child: ListTile(
-              leading: const CircleAvatar(child: Icon(Icons.person)),
-              title: Text(user?.displayName ?? 'PetCare user'),
-              subtitle: Text(user?.email ?? ''),
+          GradientHeader(
+            padding: EdgeInsets.fromLTRB(
+              AppConstants.pagePadding,
+              MediaQuery.paddingOf(context).top + 20,
+              AppConstants.pagePadding,
+              28,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Profile',
+                    style: theme.textTheme.titleLarge
+                        ?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Container(
+                      width: 68,
+                      height: 68,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        initials.isEmpty ? '🐾' : initials,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(name,
+                              style: theme.textTheme.titleLarge
+                                  ?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
+                          Text(user?.email ?? '',
+                              style: theme.textTheme.bodyMedium
+                                  ?.copyWith(color: Colors.white.withValues(alpha: 0.9))),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 24),
-          Text('Appearance', style: theme.textTheme.titleSmall),
-          const SizedBox(height: 8),
-          SegmentedButton<ThemeMode>(
-            segments: const [
-              ButtonSegment(
-                  value: ThemeMode.light,
-                  icon: Icon(Icons.light_mode_outlined),
-                  label: Text('Light')),
-              ButtonSegment(
-                  value: ThemeMode.dark,
-                  icon: Icon(Icons.dark_mode_outlined),
-                  label: Text('Dark')),
-              ButtonSegment(
-                  value: ThemeMode.system,
-                  icon: Icon(Icons.settings_suggest_outlined),
-                  label: Text('System')),
-            ],
-            selected: {themeMode},
-            onSelectionChanged: (selection) =>
-                ref.read(themeModeProvider.notifier).setMode(selection.first),
-          ),
-          const SizedBox(height: 24),
-          Text('Settings', style: theme.textTheme.titleSmall),
-          const SizedBox(height: 8),
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.notifications_outlined),
-              title: const Text('Notifications'),
-              subtitle: const Text('Vaccination, appointment and medication reminders'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push(AppRoutes.notificationSettings),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppConstants.pagePadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SectionTitle(
+                  title: 'Appearance',
+                  icon: Icons.palette_outlined,
+                  accent: FeatureAccent.medications,
+                ),
+                SoftCard(
+                  padding: const EdgeInsets.all(12),
+                  child: SegmentedButton<ThemeMode>(
+                    segments: const [
+                      ButtonSegment(
+                          value: ThemeMode.light,
+                          icon: Icon(Icons.light_mode_outlined),
+                          label: Text('Light')),
+                      ButtonSegment(
+                          value: ThemeMode.dark,
+                          icon: Icon(Icons.dark_mode_outlined),
+                          label: Text('Dark')),
+                      ButtonSegment(
+                          value: ThemeMode.system,
+                          icon: Icon(Icons.settings_suggest_outlined),
+                          label: Text('System')),
+                    ],
+                    selected: {themeMode},
+                    onSelectionChanged: (selection) =>
+                        ref.read(themeModeProvider.notifier).setMode(selection.first),
+                  ),
+                ),
+                const SectionTitle(
+                  title: 'Settings',
+                  icon: Icons.tune,
+                  accent: FeatureAccent.settings,
+                ),
+                Card(
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    leading: const IconBadge(
+                      icon: Icons.notifications_outlined,
+                      accent: FeatureAccent.documents,
+                    ),
+                    title: const Text('Notifications'),
+                    subtitle: const Text('Vaccination, appointment and medication reminders'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push(AppRoutes.notificationSettings),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: theme.colorScheme.error,
+                    side: BorderSide(color: theme.colorScheme.error.withValues(alpha: 0.5), width: 1.5),
+                  ),
+                  onPressed: () => _confirmLogout(context, ref),
+                  icon: const Icon(Icons.logout),
+                  label: const Text('Log out'),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 32),
-          OutlinedButton.icon(
-            onPressed: () => _confirmLogout(context, ref),
-            icon: const Icon(Icons.logout),
-            label: const Text('Log out'),
           ),
         ],
       ),
