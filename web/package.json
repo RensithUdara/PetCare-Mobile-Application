@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test:rules:run": "vitest run -c vitest.rules.config.ts",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-petcare-rules \"npm run test:rules:run\""
+    "test:rules": "firebase emulators:exec --only firestore --project demo-petcare-rules \"npm run test:rules:run\"",
+    "test": "vitest run"
   },
   "dependencies": {
     "clsx": "^2.1.1",
