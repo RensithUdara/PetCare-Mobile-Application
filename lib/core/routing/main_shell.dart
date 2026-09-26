@@ -1,16 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/sync/presentation/providers/sync_providers.dart';
+import '../../features/sync/presentation/widgets/sync_widgets.dart';
+
 /// Bottom-navigation scaffold hosting the main tabs.
-class MainShell extends StatelessWidget {
+class MainShell extends ConsumerWidget {
   const MainShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bannerVisible = ref.watch(syncBannerVisibleProvider);
     return Scaffold(
-      body: navigationShell,
+      body: Column(
+        children: [
+          const SyncStatusBanner(),
+          Expanded(
+            // While the banner shows it owns the status-bar inset.
+            child: MediaQuery.removePadding(
+              context: context,
+              removeTop: bannerVisible,
+              child: navigationShell,
+            ),
+          ),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: (index) => navigationShell.goBranch(
