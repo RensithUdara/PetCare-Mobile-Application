@@ -114,6 +114,7 @@ void main() {
       await tester.tap(find.textContaining('Dog'));
       await tester.enterText(field('Breed'), 'Golden Retriever');
       await tester.enterText(field('Weight'), '12,5');
+      await tester.ensureVisible(find.text('Male'));
       await tester.tap(find.text('Male'));
       await tester.tap(find.widgetWithText(FilledButton, 'Add Pet'));
       await tester.pump();
