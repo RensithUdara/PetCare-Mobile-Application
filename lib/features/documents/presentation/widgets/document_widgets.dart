@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/routing/app_routes.dart';
-import '../../domain/entities/medical_document.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/modern_widgets.dart';
 import '../../../sync/presentation/widgets/sync_widgets.dart';
+import '../../domain/entities/medical_document.dart';
 import '../providers/document_providers.dart';
 
 extension DocumentTypeIcon on DocumentType {
@@ -133,7 +135,7 @@ class PetDocumentsTile extends ConsumerWidget {
         '${docs.length} file${docs.length == 1 ? '' : 's'} · Latest: ${latest.name}',
     };
     return ListTile(
-      leading: const Icon(Icons.description_outlined),
+      leading: const IconBadge(icon: Icons.description_outlined, accent: FeatureAccent.documents),
       title: const Text('Documents'),
       subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
       trailing: const Icon(Icons.chevron_right),

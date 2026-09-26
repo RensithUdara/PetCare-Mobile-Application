@@ -4,13 +4,15 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/date_utils.dart';
+import '../../../../core/widgets/modern_widgets.dart';
 import '../../../../core/widgets/status_badge.dart';
+import '../../../sync/presentation/widgets/sync_widgets.dart';
 import '../../domain/entities/dose_time.dart';
 import '../../domain/entities/medication.dart';
 import '../../domain/entities/medication_overview.dart';
 import '../../domain/logic/medication_schedule.dart';
-import '../../../sync/presentation/widgets/sync_widgets.dart';
 import '../providers/medication_providers.dart';
 
 extension MedicationStatusStyle on MedicationStatus {
@@ -151,7 +153,7 @@ class PetMedicationsTile extends ConsumerWidget {
     }
 
     return ListTile(
-      leading: const Icon(Icons.medication_outlined),
+      leading: const IconBadge(icon: Icons.medication_outlined, accent: FeatureAccent.medications),
       title: const Text('Medications'),
       subtitle: Text(subtitle),
       trailing: const Icon(Icons.chevron_right),

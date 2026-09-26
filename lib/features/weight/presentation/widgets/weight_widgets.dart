@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/modern_widgets.dart';
 import '../../domain/entities/weight_entry.dart';
 import '../../domain/logic/weight_trend.dart';
 import '../providers/weight_providers.dart';
@@ -198,7 +199,7 @@ class PetWeightTile extends ConsumerWidget {
           '${change == null ? '' : ' · ${signedKg(change)} since last'}';
     }
     return ListTile(
-      leading: const Icon(Icons.monitor_weight_outlined),
+      leading: const IconBadge(icon: Icons.monitor_weight_outlined, accent: FeatureAccent.weight),
       title: const Text('Weight'),
       subtitle: Text(subtitle),
       trailing: const Icon(Icons.chevron_right),
