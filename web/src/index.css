@@ -1,68 +1,26 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  html { -webkit-font-smoothing: antialiased; }
+  body { @apply bg-surface text-brand-navy; }
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+@layer components {
+  .card { @apply rounded-2xl bg-white shadow-soft; }
+  .input {
+    @apply w-full rounded-xl border-2 border-transparent bg-slate-100 px-4 py-3 text-sm text-brand-navy
+           placeholder:text-slate-400 outline-none transition focus:border-brand-teal focus:bg-white;
   }
-  a:hover {
-    color: #747bff;
+  .label { @apply mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500; }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold
+           transition active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-50;
   }
-  button {
-    background-color: #f9f9f9;
-  }
+  .btn-primary { @apply btn bg-brand-teal text-white shadow-glow hover:bg-brand-tealDeep; }
+  .btn-outline { @apply btn border-2 border-brand-teal/40 text-brand-tealDeep hover:bg-brand-teal/5; }
+  .btn-ghost { @apply btn text-slate-600 hover:bg-slate-100; }
+  .btn-danger { @apply btn bg-red-500 text-white shadow-[0_10px_24px_-6px_rgba(239,68,68,.5)] hover:bg-red-600; }
+  .chip { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold; }
 }
