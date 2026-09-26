@@ -38,8 +38,14 @@ timestamp for the upcoming Cloud Functions reminder job.
 
 Appointments live at `users/{uid}/appointments/{id}` (also keyed by `petId`) with `dateTime`,
 `type`, `status` (`scheduled` / `completed` / `cancelled`) and the same `reminderAt` field
-(cleared once an appointment is no longer scheduled). Deleting a pet deletes its vaccinations
-and appointments.
+(cleared once an appointment is no longer scheduled).
+
+Medications live at `users/{uid}/medications/{id}` with `frequency`, `startDate`, optional
+`endDate` (inclusive; `null` = ongoing), `doseTimes` as `"HH:mm"` strings and `remindersEnabled`.
+Individual doses are **not** stored — they are computed from the schedule
+(`medications/domain/logic/medication_schedule.dart`), and the calendar expands them lazily per day.
+
+Deleting a pet deletes its vaccinations, appointments and medications.
 
 ## Code generation
 
@@ -116,7 +122,8 @@ lib/
 - [x] Phase 3 — pet management (CRUD, photos, multiple pets)
 - [x] Phase 4 — vaccinations (records, status, reminders config, history timeline)
 - [x] Phase 5 — appointments (schedule, complete, cancel, history) and calendar
-- [ ] Phase 6+ — medications, dashboard, notifications, …
+- [x] Phase 6 — medications (dosage, frequency, course dates, dose times, stop) + calendar doses
+- [ ] Phase 7+ — dashboard, notifications, documents, …
 
 ## Tests
 
