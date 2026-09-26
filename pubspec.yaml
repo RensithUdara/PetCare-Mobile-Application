@@ -81,6 +81,7 @@ dev_dependencies:
   freezed: ^3.2.3
   json_serializable: ^6.11.2
   file: ^7.0.1
+  flutter_native_splash: ^2.4.7
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -92,6 +93,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/images/app_logo.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -123,3 +127,15 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Native launch screen (regenerate with `dart run flutter_native_splash:create`).
+# Matches the first frame of SplashScreen so the hand-off is seamless.
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/images/splash_logo.png
+  fullscreen: true
+  android_12:
+    color: "#FFFFFF"
+    image: assets/images/splash_logo_android12.png
+    icon_background_color: "#FFFFFF"
+  web: false
