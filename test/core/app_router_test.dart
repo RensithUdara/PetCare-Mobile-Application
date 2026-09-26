@@ -66,6 +66,7 @@ void main() {
       AppRoutes.vetEdit('v1'),
       AppRoutes.weight('p1'),
       AppRoutes.emergency('p1'),
+      AppRoutes.petSharing('p1'),
       AppRoutes.publicProfile('PC-ABC2345'),
     ];
 
