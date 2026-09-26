@@ -50,6 +50,10 @@ certificates) with files at `users/{uid}/pets/{petId}/documents/{id}/{fileName}`
 (images or PDFs, max 10 MB — enforced in the `AddDocument` use case and `storage.rules`).
 If writing the record fails after upload, the file is deleted again.
 
+PDFs open **inside the app** (`pdfx`, native renderer: pinch-zoom, page navigation). Files are downloaded
+through `flutter_cache_manager`, keyed by Storage path, so a document opened once stays viewable offline;
+deleting a document evicts its cached copy. "Open in another app" remains as a fallback.
+
 Deleting a pet deletes its vaccinations, appointments, medications and documents (records + files).
 
 Weigh-ins live at `users/{uid}/weights/{id}` (keyed by `petId`). The weight history is the source
@@ -213,7 +217,7 @@ lib/
 - [x] Phase 6 — medications (dosage, frequency, course dates, dose times, stop) + calendar doses
 - [x] Phase 7 — home dashboard (alerts, pet summaries, today's doses, upcoming, recent activity)
 - [x] Phase 8 — notifications (local reminders, FCM, settings, Cloud Functions fallback)
-- [x] Phase 9 — medical documents (upload photo/PDF, viewer, type filter, vaccination certificates)
+- [x] Phase 9 — medical documents (upload photo/PDF, in-app image & PDF viewer, type filter, vaccination certificates)
 - [x] Phase 10a — clinics & veterinarians, maps, nearby search (REST/Dio), directions
 - [x] Phase 10b — weight tracking (log, fl_chart trend, ranges, history, pet profile sync)
 - [x] Phase 10c — QR pet ID, emergency profile (public web page + App Links), deep links
