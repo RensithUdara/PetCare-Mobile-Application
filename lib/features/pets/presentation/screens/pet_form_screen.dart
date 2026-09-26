@@ -100,7 +100,11 @@ class _PetFormState extends ConsumerState<_PetForm> {
       notes: _clean(_notes),
     );
 
-    final id = await ref.read(petEditorControllerProvider.notifier).save(pet, photo: _photo);
+    final id = await ref.read(petEditorControllerProvider.notifier).save(
+          pet,
+          photo: _photo,
+          logWeight: pet.weightKg != null && pet.weightKg != widget.initial?.weightKg,
+        );
     if (id == null || !mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(

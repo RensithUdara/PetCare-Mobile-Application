@@ -25,6 +25,7 @@ class PetSelector extends ConsumerWidget {
 
     return DropdownButtonFormField<String>(
       initialValue: selected,
+      isExpanded: true,
       onChanged: enabled ? onChanged : null,
       validator: (v) => v == null ? 'Choose a pet' : null,
       decoration: const InputDecoration(labelText: 'Pet *', prefixIcon: Icon(Icons.pets)),
@@ -36,7 +37,7 @@ class PetSelector extends ConsumerWidget {
               children: [
                 PetAvatar.fromPet(pet, radius: 12),
                 const SizedBox(width: 10),
-                Text(pet.name),
+                Flexible(child: Text(pet.name, overflow: TextOverflow.ellipsis)),
               ],
             ),
           ),

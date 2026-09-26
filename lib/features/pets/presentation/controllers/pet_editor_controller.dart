@@ -2,7 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/failure.dart';
+import '../../../../core/utils/clock.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
+import '../../../emergency/presentation/providers/emergency_providers.dart';
+import '../../../sync/presentation/providers/sync_providers.dart';
+import '../../../weight/domain/entities/weight_entry.dart';
+import '../../../weight/presentation/providers/weight_providers.dart';
 import '../../domain/entities/pet.dart';
 import '../../domain/entities/photo_change.dart';
 import '../providers/pet_providers.dart';
@@ -30,9 +35,24 @@ class PetEditorController extends Notifier<PetEditorState> {
     return uid;
   }
 
-  /// Returns the pet id on success, `null` on failure.
-  Future<String?> save(Pet pet, {PhotoChange photo = const PhotoUnchanged()}) async {
+  /// Returns the pet id on success, `null` on failure. With [logWeight],
+  /// the pet's weight is also recorded as today's weigh-in.
+  Future<String?> save(
+    Pet pet, {
+    PhotoChange photo = const PhotoUnchanged(),
+    bool logWeight = false,
+  }) async {
     if (state.isBusy) return null;
+    if (photo is PhotoReplaced && ref.read(isOfflineProvider)) {
+      state = const PetEditorState(
+        error: Failure(
+          'You’re offline. Uploading photos and documents needs an internet connection — '
+          'try again when you’re back online.',
+          code: 'offline',
+        ),
+      );
+      return null;
+    }
     state = const PetEditorState(isBusy: true);
     try {
       final id = await ref.read(savePetProvider)(
@@ -43,11 +63,43 @@ class PetEditorController extends Notifier<PetEditorState> {
           if (ref.mounted) state = PetEditorState(isBusy: true, uploadProgress: p);
         },
       );
+      if (logWeight && pet.weightKg != null) await _logWeight(id, pet.weightKg!);
+      if (!pet.isNew) await _refreshPublicProfile(id);
       if (ref.mounted) state = const PetEditorState();
       return id;
     } catch (e) {
       _fail(e);
       return null;
+    }
+  }
+
+  /// Keeps the weight history in step with the weight entered in the pet
+  /// form. Best effort: the pet itself is already saved.
+  Future<void> _logWeight(String petId, double weightKg) async {
+    try {
+      final uid = _requireUid();
+      await ref.read(logWeightProvider)(
+        ownerId: uid,
+        entry: WeightEntry(
+          ownerId: uid,
+          petId: petId,
+          date: ref.read(clockProvider)(),
+          weightKg: weightKg,
+        ),
+      );
+    } catch (e) {
+      debugPrint('Could not log weight: $e');
+    }
+  }
+
+  /// Name/photo/breed changes must reach the public QR page. Best effort.
+  Future<void> _refreshPublicProfile(String petId) async {
+    try {
+      final uid = _requireUid();
+      final pet = await ref.read(petRepositoryProvider).watchPet(uid, petId).first;
+      if (pet != null) await ref.read(refreshPublicProfileProvider)(ownerId: uid, pet: pet);
+    } catch (e) {
+      debugPrint('Could not refresh public profile: $e');
     }
   }
 

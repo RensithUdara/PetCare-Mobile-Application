@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/entities/pet.dart';
 import '../../domain/logic/pet_age.dart';
+import '../../../sync/presentation/widgets/sync_widgets.dart';
 import 'pet_avatar.dart';
 
 class PetCard extends StatelessWidget {
@@ -37,6 +38,7 @@ class PetCard extends StatelessWidget {
                       style: theme.textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.w600),
                     ),
+                    PendingSyncBadge(id: pet.id),
                     const SizedBox(height: 2),
                     Text(
                       details,

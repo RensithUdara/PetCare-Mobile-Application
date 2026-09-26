@@ -33,21 +33,22 @@ class PetRepositoryImpl implements PetRepository {
   @override
   Future<void> savePet(Pet pet) {
     assert(!pet.isNew, 'Pet id must be set before saving');
-    return guardFirebase(
+    return guardFirebaseWrite(
       () => _remote.savePet(PetModel.fromEntity(pet)),
+      label: 'Save pet',
       message: 'Could not save pet. Please try again.',
     );
   }
 
   @override
   Future<void> deletePet(String ownerId, String petId) {
-    return guardFirebase(() async {
+    return guardFirebaseWrite(() async {
       await _remote.deletePet(ownerId, petId);
       // Best effort: leftover photos must not make the delete fail.
       try {
         await _remote.deleteAllPhotos(ownerId, petId);
       } catch (_) {}
-    }, message: 'Could not delete pet. Please try again.');
+    }, label: 'Delete pet', message: 'Could not delete pet. Please try again.');
   }
 
   @override
