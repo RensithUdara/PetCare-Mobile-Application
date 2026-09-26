@@ -2,7 +2,7 @@
 
 A Flutter app for tracking pet vaccinations, vet appointments, medications and medical records.
 
-**Stack:** Flutter · Riverpod 3 · GoRouter · Firebase (Auth, Firestore) · Material 3
+**Stack:** Flutter · Riverpod 3 · GoRouter · Firebase (Auth, Firestore, Storage, FCM, Functions) · Dio · flutter_map · fl_chart · Material 3
 
 ## Getting started
 
@@ -52,6 +52,24 @@ If writing the record fails after upload, the file is deleted again.
 
 Deleting a pet deletes its vaccinations, appointments, medications and documents (records + files).
 
+Weigh-ins live at `users/{uid}/weights/{id}` (keyed by `petId`). The weight history is the source
+of truth: `Pet.weightKg` is a denormalised copy of the latest entry, kept in sync by the
+`SyncPetCurrentWeight` use case; changing the weight in the pet form logs a weigh-in.
+
+Clinics live at `users/{uid}/clinics/{id}` (with optional `latitude`/`longitude`) and
+veterinarians at `users/{uid}/veterinarians/{id}` (optional `clinicId`). Deleting a clinic keeps
+its vets but unlinks them.
+
+### Maps & nearby clinics
+
+- Maps use **flutter_map + OpenStreetMap tiles** — no API key or billing needed. Please respect the
+  [OSM tile usage policy](https://operations.osmfoundation.org/policies/tiles/) (the app sends a
+  `User-Agent`; for a production release consider a commercial tile provider).
+- **Find vets near me** queries the public Overpass API over **Dio** (`core/network/dio_client.dart`)
+  for `amenity=veterinary` within 5 km. Results can be saved to your clinics.
+- **Directions** open Google Maps / Apple Maps via a URL (no key).
+- Saved clinic and vet names autocomplete in appointment, vaccination and medication forms.
+
 ## Reminders & notifications
 
 - **Local notifications (primary).** `features/notifications/domain/logic/reminder_planner.dart`
@@ -74,6 +92,29 @@ Deleting a pet deletes its vaccinations, appointments, medications and documents
 2. **Functions** (requires the Blaze plan):
    `cd functions && npm install && cd .. && firebase deploy --only functions,firestore:indexes`
    (the collection-group indexes on `reminderAt` live in `firestore.indexes.json`).
+
+## QR Pet ID & emergency profile
+
+- Private settings: `users/{uid}/emergencyProfiles/{petId}` (what to share, contact, warnings).
+- Public snapshot: `publicProfiles/{publicId}` — **world-readable, owner-writable** (see
+  `firestore.rules`). It is built by the pure `buildPublicProfile()` and contains *only* the fields
+  the owner opted into; it is republished when the pet's details change and deleted with the pet.
+- IDs look like `PC-8A72F9K` (no 0/O/1/I/L) and never change, so printed tags keep working;
+  turning the profile off just withdraws the page.
+- QR codes encode `https://<projectId>.web.app/p/<publicId>`:
+  - **Without the app:** Firebase Hosting serves `public/p.html`, which reads the snapshot through
+    the Firestore REST API (no login, no SDK; values rendered with `textContent`).
+  - **With the app (Android):** an `autoVerify` App Link opens the in-app `/p/:publicId` screen,
+    which is reachable without signing in (see `redirect.dart`).
+
+### Setup
+
+1. `firebase deploy --only hosting,firestore:rules`
+2. **Android App Links:** put your signing certificate's SHA-256 (`cd android && ./gradlew signingReport`,
+   plus the Play App Signing key for releases) into `public/.well-known/assetlinks.json` and redeploy.
+3. **iOS Universal Links:** replace `REPLACE_WITH_TEAM_ID` in
+   `public/.well-known/apple-app-site-association`, and add the *Associated Domains* capability
+   `applinks:<projectId>.web.app` in Xcode.
 
 ## Code generation
 
@@ -154,7 +195,10 @@ lib/
 - [x] Phase 7 — home dashboard (alerts, pet summaries, today's doses, upcoming, recent activity)
 - [x] Phase 8 — notifications (local reminders, FCM, settings, Cloud Functions fallback)
 - [x] Phase 9 — medical documents (upload photo/PDF, viewer, type filter, vaccination certificates)
-- [ ] Phase 10 — maps & clinics, weight tracking, offline sync, QR pet ID, deep links, …
+- [x] Phase 10a — clinics & veterinarians, maps, nearby search (REST/Dio), directions
+- [x] Phase 10b — weight tracking (log, fl_chart trend, ranges, history, pet profile sync)
+- [x] Phase 10c — QR pet ID, emergency profile (public web page + App Links), deep links
+- [ ] Phase 10d — offline mode & sync status
 
 ## Tests
 
