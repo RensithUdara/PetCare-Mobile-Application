@@ -8,6 +8,7 @@ import 'core/theme/theme_mode_controller.dart';
 import 'features/authentication/presentation/providers/auth_providers.dart';
 import 'features/notifications/presentation/controllers/notification_events_controller.dart';
 import 'features/notifications/presentation/controllers/reminder_sync_controller.dart';
+import 'features/sync/presentation/providers/sync_providers.dart';
 
 class PetCareApp extends ConsumerWidget {
   const PetCareApp({super.key});
@@ -17,6 +18,11 @@ class PetCareApp extends ConsumerWidget {
     // Keep reminders in sync for the whole session (listen, not watch, so
     // sync progress never rebuilds the app).
     ref.listen(reminderSyncControllerProvider, (_, _) {});
+    // Offline: let writes return immediately instead of waiting for the
+    // server (the tracker starts in "online" mode).
+    ref.listen(isOfflineProvider, (_, offline) {
+      ref.read(pendingWriteTrackerProvider).setOffline(offline);
+    });
 
     // Open the screen for a tapped notification once the user is signed in.
     void openPendingNotification() {
