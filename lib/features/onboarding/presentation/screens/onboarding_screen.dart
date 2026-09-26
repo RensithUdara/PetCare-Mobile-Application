@@ -2,23 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/onboarding_controller.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class _OnboardingPage {
-  const _OnboardingPage(this.icon, this.title, this.body);
+  const _OnboardingPage(this.icon, this.title, this.body, this.accent);
   final IconData icon;
   final String title;
   final String body;
+  final FeatureAccent accent;
 }
 
 const _pages = [
   _OnboardingPage(Icons.pets, 'Manage Your Pets',
-      "Keep all your pets' information in one place."),
+      "Keep all your pets' information in one place.", FeatureAccent.pets),
   _OnboardingPage(Icons.vaccines, 'Never Miss a Vaccination',
-      'Get reminders before important vaccinations are due.'),
+      'Get reminders before important vaccinations are due.', FeatureAccent.vaccinations),
   _OnboardingPage(Icons.event_available, 'Track Vet Appointments',
-      'Manage upcoming veterinary visits.'),
+      'Manage upcoming veterinary visits.', FeatureAccent.appointments),
   _OnboardingPage(Icons.folder_shared, 'Keep Medical Records Safe',
-      'Store important documents digitally.'),
+      'Store important documents digitally.', FeatureAccent.documents),
 ];
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -82,10 +84,30 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircleAvatar(
-                          radius: 80,
-                          backgroundColor: scheme.primaryContainer,
-                          child: Icon(page.icon, size: 80, color: scheme.primary),
+                        Container(
+                          width: 200,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: page.accent.color.withValues(alpha: 0.12),
+                          ),
+                          alignment: Alignment.center,
+                          child: Container(
+                            width: 150,
+                            height: 150,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: page.accent.gradient,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: page.accent.color.withValues(alpha: 0.4),
+                                  blurRadius: 30,
+                                  offset: const Offset(0, 14),
+                                ),
+                              ],
+                            ),
+                            child: Icon(page.icon, size: 72, color: Colors.white),
+                          ),
                         ),
                         const SizedBox(height: 40),
                         Text(
@@ -117,7 +139,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     width: i == _index ? 24 : 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: i == _index ? scheme.primary : scheme.outlineVariant,
+                      color: i == _index ? _pages[_index].accent.color : scheme.outlineVariant,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -126,6 +148,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             Padding(
               padding: const EdgeInsets.all(24),
               child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: _pages[_index].accent.color,
+                  shadowColor: _pages[_index].accent.color.withValues(alpha: 0.5),
+                ),
                 onPressed: _next,
                 child: Text(_isLast ? 'Get Started' : 'Next'),
               ),
