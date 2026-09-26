@@ -10,6 +10,7 @@ import '../../domain/entities/dose_time.dart';
 import '../../domain/entities/medication.dart';
 import '../../domain/entities/medication_overview.dart';
 import '../../domain/logic/medication_schedule.dart';
+import '../../../sync/presentation/widgets/sync_widgets.dart';
 import '../providers/medication_providers.dart';
 
 extension MedicationStatusStyle on MedicationStatus {
@@ -94,6 +95,7 @@ class MedicationCard extends StatelessWidget {
                           m.name,
                           style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                         ),
+                        PendingSyncBadge(id: m.id),
                         Text('${m.dosage} · ${m.frequency.label}', style: muted),
                         Text(detail, style: muted),
                       ],

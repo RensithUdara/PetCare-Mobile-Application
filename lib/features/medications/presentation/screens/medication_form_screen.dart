@@ -7,6 +7,8 @@ import '../../../../core/utils/clock.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/date_field.dart';
 import '../../../../core/widgets/state_views.dart';
+import '../../../../core/widgets/suggestion_field.dart';
+import '../../../clinics/presentation/providers/clinic_providers.dart';
 import '../../../pets/presentation/widgets/pet_selector.dart';
 import '../../domain/entities/dose_time.dart';
 import '../../domain/entities/medication.dart';
@@ -312,13 +314,11 @@ class _MedicationFormState extends ConsumerState<_MedicationForm> {
                 ),
               ),
               gap,
-              TextFormField(
+              SuggestionField(
                 controller: _vet,
-                textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(
-                  labelText: 'Prescribed by',
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
+                suggestions: ref.watch(vetNameSuggestionsProvider),
+                label: 'Prescribed by',
+                icon: Icons.person_outline,
               ),
               gap,
               TextFormField(

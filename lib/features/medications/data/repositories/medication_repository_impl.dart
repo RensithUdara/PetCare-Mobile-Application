@@ -36,22 +36,25 @@ class MedicationRepositoryImpl implements MedicationRepository {
   @override
   Future<void> save(Medication medication) {
     assert(!medication.isNew, 'Medication id must be set before saving');
-    return guardFirebase(
+    return guardFirebaseWrite(
       () => _remote.save(MedicationModel.fromEntity(medication)),
+      label: 'Save medication',
       message: 'Could not save medication. Please try again.',
     );
   }
 
   @override
-  Future<void> delete(String ownerId, String medicationId) => guardFirebase(
+  Future<void> delete(String ownerId, String medicationId) => guardFirebaseWrite(
         () => _remote.delete(ownerId, medicationId),
+        label: 'Delete medication',
         message: 'Could not delete medication. Please try again.',
       );
 
   @override
   Future<void> deleteAllForPet({required String ownerId, required String petId}) =>
-      guardFirebase(
+      guardFirebaseWrite(
         () => _remote.deleteAllForPet(ownerId, petId),
+        label: 'Delete medications',
         message: 'Could not delete this pet’s medications. Please try again.',
       );
 }
