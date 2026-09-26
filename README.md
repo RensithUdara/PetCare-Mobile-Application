@@ -152,6 +152,63 @@ one source of truth, no hand-written conflict resolution.
    `public/.well-known/apple-app-site-association`, and add the *Associated Domains* capability
    `applinks:<projectId>.web.app` in Xcode.
 
+## Web portals: admin, veterinarian & owner
+
+A React web app (`web/`, Vite + TypeScript + Tailwind) served at `https://<projectId>.web.app/app/`,
+sharing the same Firebase project and data as the mobile app.
+
+| Portal | Who | What |
+|---|---|---|
+| **Owner** (`/app/owner`) | everyone | dashboard, pets (add/edit/delete), vaccinations, appointments, medications, weight chart, documents, **vet access** (share / revoke), profile, password |
+| **Veterinarian** (`/app/doctor`) | approved doctors | dashboard with their **doctor code**, patients shared with them, full records, add vaccinations / prescriptions / visit notes |
+| **Admin** (`/app/admin`) | admins | platform counts & charts, approve / reject / revoke doctor applications, users with role changes and disable/enable |
+
+**How roles work**
+
+- Roles are Firebase Auth custom claims (`admin`, `doctor`), set only by Cloud Functions
+  (`functions/src/admin.ts`); Firestore rules trust nothing else. Everyone else is an owner.
+- A vet registers on the web → `doctors/{uid}` is created as `pending` → an admin approves it →
+  they get the doctor role and a code like `DR-7K3M9Q`.
+- An owner shares one pet by entering that code (app: pet profile → **Vet access**; or the web).
+  This creates `shares/{ownerId}_{petId}_{doctorId}`.
+- A vet can read that pet and its records, and **add** vaccinations, prescriptions (medications)
+  and visit notes (completed appointments), which show up in the owner's app with reminders.
+  They can edit only records they added and can never delete. Revoking the share removes access
+  at once. Admins see counts and profiles, never owners' pet records.
+
+**Setup**
+
+1. Register a **Web app** in the Firebase console (or `firebase apps:create web`), then copy
+   `web/.env.example` to `web/.env` and fill in the config (`firebase apps:sdkconfig web`).
+2. Enable the **Email/Password** and **Google** sign-in providers, and add your hosting domain to
+   *Authentication → Settings → Authorized domains*.
+3. First admin: put your email in `functions/.env` as `ADMIN_EMAILS=you@example.com`, deploy, sign in
+   on the web (verified email, e.g. with Google) and open `/app/setup-admin` → **Claim admin access**.
+4. Deploy: `firebase deploy --only functions,firestore:rules,hosting`. Hosting builds the web app
+   automatically (`predeploy`).
+
+**Local development (no Firebase project needed)**
+
+```bash
+npm --prefix web install
+npm --prefix web run emulators      # terminal 1: Auth, Firestore & Functions emulators
+npm --prefix web run seed           # terminal 2: demo accounts, pets, records, a share
+npm --prefix web run dev:local      # http://localhost:5173/app/ — one-click demo sign-in
+```
+
+Demo accounts (password `demo1234`): `owner@petcare.test`, `vet@petcare.test`,
+`pending.vet@petcare.test`, plus an admin (button on the login page). The demo panel only exists
+in local emulator mode.
+
+**Tests**
+
+```bash
+npm --prefix web test               # unit tests (converters, reminders, dialogs…)
+npm --prefix web run test:rules     # Firestore security rules on the emulator
+npm --prefix web run test:e2e       # full role flow: admin approval, sharing, vet records
+npm --prefix functions test         # Cloud Functions helpers
+```
+
 ## Code generation
 
 Models use Freezed + json_serializable. After changing a model:
@@ -235,6 +292,7 @@ lib/
 - [x] Phase 10b — weight tracking (log, fl_chart trend, ranges, history, pet profile sync)
 - [x] Phase 10c — QR pet ID, emergency profile (public web page + App Links), deep links
 - [x] Phase 10d — offline mode & sync status (pending/failed writes, retry, banner, badges)
+- [x] Web portals — React admin / veterinarian / owner system with role-based access and vet sharing
 
 ## Tests
 
