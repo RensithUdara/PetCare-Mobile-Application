@@ -67,14 +67,16 @@ class SoftCard extends StatelessWidget {
         color: gradient == null ? (color ?? (isDark ? scheme.surfaceContainer : Colors.white)) : null,
         boxShadow: AppTheme.softShadow(context, tint: shadowTint),
       ),
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          borderRadius: shape,
-          onTap: onTap,
-          child: Padding(padding: padding, child: child),
-        ),
-      ),
+      child: onTap == null
+          ? Padding(padding: padding, child: child)
+          : Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                borderRadius: shape,
+                onTap: onTap,
+                child: Padding(padding: padding, child: child),
+              ),
+            ),
     );
   }
 }
