@@ -11,11 +11,17 @@ import '../../features/authentication/presentation/screens/forgot_password_scree
 import '../../features/authentication/presentation/screens/login_screen.dart';
 import '../../features/authentication/presentation/screens/register_screen.dart';
 import '../../features/calendar/presentation/screens/calendar_screen.dart';
+import '../../features/clinics/presentation/screens/clinic_details_screen.dart';
+import '../../features/clinics/presentation/screens/clinic_form_screen.dart';
+import '../../features/clinics/presentation/screens/clinics_map_screen.dart';
 import '../../features/clinics/presentation/screens/clinics_screen.dart';
+import '../../features/clinics/presentation/screens/vet_form_screen.dart';
 import '../../features/documents/domain/entities/medical_document.dart';
 import '../../features/documents/presentation/screens/document_form_screen.dart';
 import '../../features/documents/presentation/screens/document_viewer_screen.dart';
 import '../../features/documents/presentation/screens/documents_screen.dart';
+import '../../features/emergency/presentation/screens/emergency_profile_screen.dart';
+import '../../features/emergency/presentation/screens/public_profile_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/medications/presentation/screens/medication_details_screen.dart';
 import '../../features/medications/presentation/screens/medication_form_screen.dart';
@@ -29,6 +35,7 @@ import '../../features/pets/presentation/screens/pets_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
 import '../../features/vaccinations/presentation/screens/vaccination_details_screen.dart';
+import '../../features/weight/presentation/screens/weight_screen.dart';
 import '../../features/vaccinations/presentation/screens/vaccination_form_screen.dart';
 import '../../features/vaccinations/presentation/screens/vaccinations_screen.dart';
 import 'app_routes.dart';
@@ -61,6 +68,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       _route(AppRoutes.login, (_) => const LoginScreen()),
       _route(AppRoutes.register, (_) => const RegisterScreen()),
       _route(AppRoutes.forgotPassword, (_) => const ForgotPasswordScreen()),
+      _route('/p/:publicId', (s) => PublicProfileScreen(publicId: s.param('publicId'))),
       ..._formRoutes,
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => MainShell(navigationShell: shell),
@@ -68,7 +76,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           _branch(_homeRoute),
           _branch(_petsRoute),
           _branch(_calendarRoute),
-          _branch(_route(AppRoutes.clinics, (_) => const ClinicsScreen())),
+          _branch(_route(
+            AppRoutes.clinics,
+            (_) => const ClinicsScreen(),
+            routes: [
+              // 'map' must precede ':id'.
+              _route('map', (_) => const ClinicsMapScreen()),
+              _route(':id', (s) => ClinicDetailsScreen(clinicId: s.param('id'))),
+            ],
+          )),
           _branch(_route(
             AppRoutes.profile,
             (_) => const ProfileScreen(),
@@ -124,6 +140,8 @@ final _petsRoute = _route(
           ],
         ),
         _route('documents', (s) => DocumentsScreen(petId: s.param('petId'))),
+        _route('weight', (s) => WeightScreen(petId: s.param('petId'))),
+        _route('emergency', (s) => EmergencyProfileScreen(petId: s.param('petId'))),
         _route(
           'medications',
           (s) => MedicationsScreen(petId: s.param('petId')),
@@ -184,4 +202,8 @@ final _formRoutes = [
   ),
   _route('/edit/document/:id', (s) => DocumentFormScreen(documentId: s.param('id'))),
   _route('/view/document/:id', (s) => DocumentViewerScreen(documentId: s.param('id'))),
+  _route(AppRoutes.clinicNew, (_) => const ClinicFormScreen()),
+  _route('/edit/clinic/:id', (s) => ClinicFormScreen(clinicId: s.param('id'))),
+  _route('/edit/vet', (s) => VetFormScreen(clinicId: s.query('clinicId'))),
+  _route('/edit/vet/:id', (s) => VetFormScreen(vetId: s.param('id'))),
 ];

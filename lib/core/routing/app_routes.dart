@@ -12,6 +12,11 @@ abstract final class AppRoutes {
 
   static const authRoutes = {login, register, forgotPassword};
 
+  // ── Public (no sign-in) ────────────────────────────────────────────────
+  /// Emergency profile opened from a scanned QR code / App Link.
+  static String publicProfile(String publicId) => '/p/$publicId';
+  static bool isPublic(String location) => location.startsWith('/p/');
+
   // ── Tabs ───────────────────────────────────────────────────────────────
   static const home = '/home';
   static const pets = '/pets';
@@ -29,6 +34,8 @@ abstract final class AppRoutes {
   static String medications(String petId) => '/pets/$petId/medications';
   static String medicationDetails(String petId, String id) => '/pets/$petId/medications/$id';
   static String documents(String petId) => '/pets/$petId/documents';
+  static String weight(String petId) => '/pets/$petId/weight';
+  static String emergency(String petId) => '/pets/$petId/emergency';
 
   // ── Full-screen viewers ────────────────────────────────────────────────
   static String documentViewer(String id) => '/view/document/$id';
@@ -37,6 +44,10 @@ abstract final class AppRoutes {
   static String homeAppointment(String id) => '/home/appointment/$id';
   static String homeVaccination(String id) => '/home/vaccination/$id';
   static String homeMedication(String id) => '/home/medication/$id';
+
+  // ── Clinics tab ────────────────────────────────────────────────────────
+  static const clinicsMap = '/clinics/map';
+  static String clinicDetails(String id) => '/clinics/$id';
 
   // ── Calendar tab ───────────────────────────────────────────────────────
   static String calendarAppointment(String id) => '/calendar/appointment/$id';
@@ -77,4 +88,10 @@ abstract final class AppRoutes {
         'name': ?name,
       }).toString();
   static String documentEdit(String id) => '/edit/document/$id';
+
+  static const clinicNew = '/edit/clinic';
+  static String clinicEdit(String id) => '/edit/clinic/$id';
+  static String vetNew({String? clinicId}) =>
+      clinicId == null ? '/edit/vet' : '/edit/vet?clinicId=$clinicId';
+  static String vetEdit(String id) => '/edit/vet/$id';
 }
