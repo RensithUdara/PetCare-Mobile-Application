@@ -5,7 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../../core/errors/failure.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/widgets/app_dialogs.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
+import '../../../../core/widgets/form_widgets.dart';
+import '../../../../core/widgets/modern_widgets.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../domain/entities/clinic.dart';
 import '../controllers/clinic_editor_controller.dart';
@@ -28,7 +33,7 @@ class ClinicFormScreen extends ConsumerWidget {
           error: (_, _) => const Scaffold(body: ErrorView(message: 'Could not load this clinic.')),
           data: (c) => c == null
               ? Scaffold(
-                  appBar: AppBar(),
+                  appBar: const BrandAppBar.page(title: 'Clinic'),
                   body: const EmptyState(icon: Icons.search_off, title: 'Clinic not found'),
                 )
               : _ClinicForm(initial: c),
@@ -89,11 +94,17 @@ class _ClinicFormState extends ConsumerState<_ClinicForm> {
           location: _location,
         ));
     if (id == null || !mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(_isEditing ? 'Clinic updated' : 'Clinic saved')),
+    await showSuccessDialog(
+      context,
+      title: _isEditing ? 'Clinic updated' : 'Clinic saved',
+      message: _isEditing
+          ? 'Your changes to ${_name.text.trim()} are saved.'
+          : '${_name.text.trim()} is now in your clinics.',
     );
-    context.pop();
+    if (mounted) context.pop();
   }
+
+  static const _hourPresets = ['Open 24/7', 'Mon–Fri 8 AM–6 PM', 'Mon–Sat 9 AM–8 PM', 'By appointment'];
 
   @override
   Widget build(BuildContext context) {
@@ -107,85 +118,175 @@ class _ClinicFormState extends ConsumerState<_ClinicForm> {
     });
     final busy = ref.watch(clinicEditorControllerProvider).isLoading;
     final theme = Theme.of(context);
-    const gap = SizedBox(height: 16);
+    final scheme = theme.colorScheme;
 
     Widget field(TextEditingController c, String label, IconData icon,
-            {TextInputType? keyboard, String? Function(String?)? validator, int lines = 1}) =>
+            {TextInputType? keyboard,
+            String? Function(String?)? validator,
+            int lines = 1,
+            String? hint,
+            ValueChanged<String>? onChanged}) =>
         TextFormField(
           controller: c,
           keyboardType: keyboard,
           validator: validator,
+          onChanged: onChanged,
           minLines: lines,
           maxLines: lines == 1 ? 1 : lines + 2,
           textCapitalization: keyboard == null ? TextCapitalization.sentences : TextCapitalization.none,
-          decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
+          decoration: InputDecoration(labelText: label, hintText: hint, prefixIcon: Icon(icon)),
         );
 
+    final name = _name.text.trim();
+
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? 'Edit Clinic' : 'Add Clinic')),
+      appBar: BrandAppBar.page(title: _isEditing ? 'Edit Clinic' : 'Add Clinic'),
+      bottomNavigationBar: FormSaveBar(
+        label: _isEditing ? 'Save Changes' : 'Save Clinic',
+        icon: _isEditing ? Icons.check_rounded : Icons.add_business_outlined,
+        busy: busy,
+        busyLabel: 'Saving…',
+        onPressed: _save,
+      ),
       body: AbsorbPointer(
         absorbing: busy,
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
             children: [
-              field(_name, 'Clinic name *', Icons.local_hospital_outlined,
-                  validator: (v) => Validators.required(v, field: 'Clinic name')),
-              gap,
-              field(_address, 'Address', Icons.place_outlined, lines: 2),
-              gap,
-              Card(
-                clipBehavior: Clip.antiAlias,
-                child: Column(
+              GradientHeader(
+                floating: true,
+                gradient: FeatureAccent.clinics.gradient,
+                padding: const EdgeInsets.all(20),
+                child: Row(
                   children: [
-                    if (_location != null)
-                      SizedBox(
-                        height: 140,
-                        child: PetCareMap(
-                          center: _location!.toLatLng(),
-                          zoom: 15,
-                          interactive: false,
-                          markers: [
-                            pinMarker(_location!.toLatLng(), color: theme.colorScheme.primary),
-                          ],
-                        ),
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 14,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
                       ),
-                    ListTile(
-                      leading: const Icon(Icons.map_outlined),
-                      title: Text(_location == null ? 'Set location on map' : 'Change location'),
-                      subtitle: const Text('Used for the map and directions'),
-                      trailing: _location == null
-                          ? const Icon(Icons.chevron_right)
-                          : IconButton(
-                              tooltip: 'Remove location',
-                              icon: const Icon(Icons.close),
-                              onPressed: () => setState(() => _location = null),
-                            ),
-                      onTap: _pickLocation,
+                      child: Icon(Icons.local_hospital_rounded, size: 34, color: FeatureAccent.clinics.deep),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name.isEmpty ? 'New clinic' : name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleLarge
+                                ?.copyWith(color: Colors.white, fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _location == null ? 'Save your trusted vet clinic' : 'Location pinned on the map',
+                            style: theme.textTheme.bodyMedium
+                                ?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-              gap,
-              field(_phone, 'Phone', Icons.call_outlined, keyboard: TextInputType.phone),
-              gap,
-              field(_email, 'Email', Icons.email_outlined,
-                  keyboard: TextInputType.emailAddress,
-                  validator: (v) => (v == null || v.trim().isEmpty) ? null : Validators.email(v)),
-              gap,
-              field(_website, 'Website', Icons.language, keyboard: TextInputType.url),
-              gap,
-              field(_hours, 'Opening hours', Icons.schedule),
-              gap,
-              field(_notes, 'Notes', Icons.notes, lines: 2),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: busy ? null : _save,
-                child: busy
-                    ? const SizedBox(
-                        width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5))
-                    : Text(_isEditing ? 'Save Changes' : 'Save Clinic'),
+              FormSection(
+                title: 'Clinic',
+                icon: Icons.local_hospital_outlined,
+                accent: FeatureAccent.clinics,
+                children: [
+                  field(_name, 'Clinic name *', Icons.local_hospital_outlined,
+                      hint: 'e.g. Happy Paws Veterinary',
+                      onChanged: (_) => setState(() {}),
+                      validator: (v) => Validators.required(v, field: 'Clinic name')),
+                  field(_address, 'Address', Icons.place_outlined, lines: 2),
+                ],
+              ),
+              FormSection(
+                title: 'Location',
+                icon: Icons.map_outlined,
+                accent: FeatureAccent.emergency,
+                subtitle: 'Used for the clinic map and turn-by-turn directions.',
+                children: [
+                  if (_location != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: SizedBox(
+                        height: 150,
+                        child: PetCareMap(
+                          center: _location!.toLatLng(),
+                          zoom: 15,
+                          interactive: false,
+                          markers: [pinMarker(_location!.toLatLng(), color: scheme.primary)],
+                        ),
+                      ),
+                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+                          onPressed: _pickLocation,
+                          icon: Icon(_location == null ? Icons.add_location_alt_outlined : Icons.edit_location_alt_outlined),
+                          label: Text(_location == null ? 'Set location on map' : 'Change location'),
+                        ),
+                      ),
+                      if (_location != null) ...[
+                        const SizedBox(width: 10),
+                        IconButton.filledTonal(
+                          tooltip: 'Remove location',
+                          onPressed: () => setState(() => _location = null),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+              FormSection(
+                title: 'Contact',
+                icon: Icons.call_outlined,
+                accent: FeatureAccent.appointments,
+                children: [
+                  field(_phone, 'Phone', Icons.call_outlined,
+                      keyboard: TextInputType.phone, hint: '+94 11 234 5678'),
+                  field(_email, 'Email', Icons.email_outlined,
+                      keyboard: TextInputType.emailAddress,
+                      validator: (v) => (v == null || v.trim().isEmpty) ? null : Validators.email(v)),
+                  field(_website, 'Website', Icons.language, keyboard: TextInputType.url, hint: 'www.example.com'),
+                ],
+              ),
+              FormSection(
+                title: 'Details',
+                icon: Icons.schedule_rounded,
+                accent: FeatureAccent.calendar,
+                children: [
+                  field(_hours, 'Opening hours', Icons.schedule),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final preset in _hourPresets)
+                        ActionChip(
+                          avatar: Icon(Icons.bolt_rounded, size: 16, color: FeatureAccent.calendar.color),
+                          label: Text(preset),
+                          onPressed: () => setState(() => _hours.text = preset),
+                        ),
+                    ],
+                  ),
+                  field(_notes, 'Notes', Icons.notes, lines: 2, hint: 'Parking, specialities, emergency line…'),
+                ],
               ),
             ],
           ),
@@ -231,8 +332,8 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Clinic location'),
+      appBar: BrandAppBar.page(
+        title: 'Clinic location',
         actions: [
           TextButton(
             onPressed: _point == null ? null : () => Navigator.pop(context, _point!.toGeoPoint()),
