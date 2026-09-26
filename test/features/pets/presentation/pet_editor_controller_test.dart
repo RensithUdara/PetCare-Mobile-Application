@@ -13,6 +13,8 @@ import 'package:petcare/features/pets/domain/entities/pet.dart';
 import 'package:petcare/features/pets/domain/entities/photo_change.dart';
 import 'package:petcare/features/pets/presentation/controllers/pet_editor_controller.dart';
 import 'package:petcare/features/pets/presentation/providers/pet_providers.dart';
+import 'package:petcare/features/sharing/domain/entities/pet_share.dart';
+import 'package:petcare/features/sharing/presentation/providers/sharing_providers.dart';
 import 'package:petcare/features/vaccinations/presentation/providers/vaccination_providers.dart';
 import 'package:petcare/features/weight/presentation/providers/weight_providers.dart';
 
@@ -21,6 +23,7 @@ import '../../../helpers/fake_document_repository.dart';
 import '../../../helpers/fake_emergency_repository.dart';
 import '../../../helpers/fake_medication_repository.dart';
 import '../../../helpers/fake_pet_repository.dart';
+import '../../../helpers/fake_sharing_repository.dart';
 import '../../../helpers/fake_vaccination_repository.dart';
 import '../../../helpers/fake_weight_repository.dart';
 
@@ -30,22 +33,26 @@ void main() {
   late FakePetRepository repo;
   late FakeWeightRepository weights;
   late FakeEmergencyRepository emergency;
+  late FakeSharingRepository sharing;
   late ProviderContainer container;
   final states = <PetEditorState>[];
 
   const existing = Pet(id: 'p1', ownerId: 'u1', name: 'Bruno', species: PetSpecies.dog);
 
   ProviderContainer build({String? uid = 'u1'}) {
-    final c = ProviderContainer(overrides: [
-      petRepositoryProvider.overrideWithValue(repo),
-      vaccinationRepositoryProvider.overrideWithValue(FakeVaccinationRepository()),
-      appointmentRepositoryProvider.overrideWithValue(FakeAppointmentRepository()),
-      medicationRepositoryProvider.overrideWithValue(FakeMedicationRepository()),
-      documentRepositoryProvider.overrideWithValue(FakeDocumentRepository()),
-      weightRepositoryProvider.overrideWithValue(weights),
-      emergencyProfileRepositoryProvider.overrideWithValue(emergency),
-      currentUserIdProvider.overrideWithValue(uid),
-    ]);
+    final c = ProviderContainer(
+      overrides: [
+        petRepositoryProvider.overrideWithValue(repo),
+        vaccinationRepositoryProvider.overrideWithValue(FakeVaccinationRepository()),
+        appointmentRepositoryProvider.overrideWithValue(FakeAppointmentRepository()),
+        medicationRepositoryProvider.overrideWithValue(FakeMedicationRepository()),
+        documentRepositoryProvider.overrideWithValue(FakeDocumentRepository()),
+        weightRepositoryProvider.overrideWithValue(weights),
+        emergencyProfileRepositoryProvider.overrideWithValue(emergency),
+        sharingRepositoryProvider.overrideWithValue(sharing),
+        currentUserIdProvider.overrideWithValue(uid),
+      ],
+    );
     c.listen(petEditorControllerProvider, (_, next) => states.add(next));
     addTearDown(c.dispose);
     return c;
@@ -54,9 +61,12 @@ void main() {
   setUp(() {
     repo = FakePetRepository([existing]);
     weights = FakeWeightRepository();
-    emergency = FakeEmergencyRepository(settings: const [
-      EmergencyProfile(petId: 'p1', ownerId: 'u1', publicId: 'PC-8A72F9K', contactPhone: '0771234567'),
-    ]);
+    sharing = FakeSharingRepository();
+    emergency = FakeEmergencyRepository(
+      settings: const [
+        EmergencyProfile(petId: 'p1', ownerId: 'u1', publicId: 'PC-8A72F9K', contactPhone: '0771234567'),
+      ],
+    );
     states.clear();
     container = build();
   });
@@ -91,6 +101,14 @@ void main() {
     expect(repo.pets, isEmpty);
   });
 
+  test('deleting a pet revokes vet access to it', () async {
+    await sharing.share(
+      const PetShare(ownerId: 'u1', petId: 'p1', doctorId: 'doc1', petName: 'Milo', doctorName: 'Dr. Nimali'),
+    );
+    expect(await controller().delete('p1'), isTrue);
+    expect(sharing.shares, isEmpty);
+  });
+
   test('logWeight records a weigh-in when the pet form weight changes', () async {
     await controller().save(existing.copyWith(weightKg: 12.5), logWeight: true);
 
@@ -111,7 +129,11 @@ void main() {
 
   test('deleting a pet removes its public QR page', () async {
     emergency.public['PC-8A72F9K'] = const PublicPetProfile(
-      publicId: 'PC-8A72F9K', ownerId: 'u1', petName: 'Bruno', species: 'dog');
+      publicId: 'PC-8A72F9K',
+      ownerId: 'u1',
+      petName: 'Bruno',
+      species: 'dog',
+    );
     await controller().delete('p1');
     expect(emergency.public, isEmpty);
     expect(emergency.settingsFor('p1'), isNull);
