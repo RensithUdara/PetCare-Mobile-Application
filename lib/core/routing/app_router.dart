@@ -12,6 +12,10 @@ import '../../features/authentication/presentation/screens/login_screen.dart';
 import '../../features/authentication/presentation/screens/register_screen.dart';
 import '../../features/calendar/presentation/screens/calendar_screen.dart';
 import '../../features/clinics/presentation/screens/clinics_screen.dart';
+import '../../features/documents/domain/entities/medical_document.dart';
+import '../../features/documents/presentation/screens/document_form_screen.dart';
+import '../../features/documents/presentation/screens/document_viewer_screen.dart';
+import '../../features/documents/presentation/screens/documents_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/medications/presentation/screens/medication_details_screen.dart';
 import '../../features/medications/presentation/screens/medication_form_screen.dart';
@@ -119,6 +123,7 @@ final _petsRoute = _route(
             _route(':id', (s) => AppointmentDetailsScreen(appointmentId: s.param('id'))),
           ],
         ),
+        _route('documents', (s) => DocumentsScreen(petId: s.param('petId'))),
         _route(
           'medications',
           (s) => MedicationsScreen(petId: s.param('petId')),
@@ -152,7 +157,7 @@ final _calendarRoute = _route(
   routes: _recordDetailRoutes,
 );
 
-/// Full-screen forms, reachable from any tab.
+/// Full-screen forms and viewers, reachable from any tab.
 final _formRoutes = [
   _route(AppRoutes.petNew, (_) => const PetFormScreen()),
   _route('/edit/pet/:petId', (s) => PetFormScreen(petId: s.param('petId'))),
@@ -168,4 +173,15 @@ final _formRoutes = [
   _route('/edit/appointment/:id', (s) => AppointmentFormScreen(appointmentId: s.param('id'))),
   _route('/edit/medication', (s) => MedicationFormScreen(petId: s.query('petId'))),
   _route('/edit/medication/:id', (s) => MedicationFormScreen(medicationId: s.param('id'))),
+  _route(
+    '/edit/document',
+    (s) => DocumentFormScreen(
+      petId: s.query('petId'),
+      vaccinationId: s.query('vaccinationId'),
+      initialType: DocumentType.values.asNameMap()[s.query('type')],
+      initialName: s.query('name'),
+    ),
+  ),
+  _route('/edit/document/:id', (s) => DocumentFormScreen(documentId: s.param('id'))),
+  _route('/view/document/:id', (s) => DocumentViewerScreen(documentId: s.param('id'))),
 ];

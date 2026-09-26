@@ -28,6 +28,10 @@ abstract final class AppRoutes {
   static String appointmentDetails(String petId, String id) => '/pets/$petId/appointments/$id';
   static String medications(String petId) => '/pets/$petId/medications';
   static String medicationDetails(String petId, String id) => '/pets/$petId/medications/$id';
+  static String documents(String petId) => '/pets/$petId/documents';
+
+  // ── Full-screen viewers ────────────────────────────────────────────────
+  static String documentViewer(String id) => '/view/document/$id';
 
   // ── Home tab ───────────────────────────────────────────────────────────
   static String homeAppointment(String id) => '/home/appointment/$id';
@@ -58,4 +62,19 @@ abstract final class AppRoutes {
 
   static String medicationNew(String petId) => '/edit/medication?petId=$petId';
   static String medicationEdit(String id) => '/edit/medication/$id';
+
+  /// [type] is a `DocumentType` name (core must not import feature types).
+  static String documentNew({
+    required String petId,
+    String? vaccinationId,
+    String? type,
+    String? name,
+  }) =>
+      Uri(path: '/edit/document', queryParameters: {
+        'petId': petId,
+        'vaccinationId': ?vaccinationId,
+        'type': ?type,
+        'name': ?name,
+      }).toString();
+  static String documentEdit(String id) => '/edit/document/$id';
 }
