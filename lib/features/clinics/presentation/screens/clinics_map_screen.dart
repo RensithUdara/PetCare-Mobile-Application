@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../../../core/errors/failure.dart';
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../domain/entities/clinic.dart';
@@ -79,23 +80,37 @@ class _ClinicsMapScreenState extends ConsumerState<ClinicsMapScreen> {
     final markers = [
       for (final c in nearby)
         pinMarker(c.location.toLatLng(),
-            color: scheme.tertiary, onTap: () => _showNearby(c), key: ValueKey(c.externalId)),
+            color: FeatureAccent.clinics.color,
+            icon: Icons.local_hospital_rounded,
+            onTap: () => _showNearby(c),
+            key: ValueKey(c.externalId)),
       for (final c in saved)
         pinMarker(c.location!.toLatLng(),
-            color: scheme.primary,
-            icon: Icons.local_hospital,
+            color: FeatureAccent.pets.color,
+            icon: Icons.bookmark_rounded,
             onTap: () => context.push(AppRoutes.clinicDetails(c.id)),
             key: ValueKey(c.id)),
       if (_here != null)
         Marker(
           point: _here!,
-          width: 22,
-          height: 22,
+          width: 44,
+          height: 44,
+          // "You are here": blue dot with a soft halo.
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.blue,
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 3),
+              color: FeatureAccent.appointments.color.withValues(alpha: 0.18),
+            ),
+            alignment: Alignment.center,
+            child: Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: FeatureAccent.appointments.color,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 3),
+                boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6)],
+              ),
             ),
           ),
         ),
