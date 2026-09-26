@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../domain/pet.dart';
-import '../pet_editor_controller.dart';
-import '../pet_providers.dart';
+import '../../domain/entities/pet.dart';
+import '../../domain/entities/photo_change.dart';
+import '../providers/pet_providers.dart';
 import 'pet_avatar.dart';
 
 /// Tappable avatar that lets the user take, choose, replace or remove a

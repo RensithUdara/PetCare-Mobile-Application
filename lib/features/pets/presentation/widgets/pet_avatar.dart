@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
-import '../../domain/pet.dart';
+import '../../domain/entities/pet.dart';
 
 /// Circular pet photo with caching, falling back to the species emoji.
 class PetAvatar extends StatelessWidget {

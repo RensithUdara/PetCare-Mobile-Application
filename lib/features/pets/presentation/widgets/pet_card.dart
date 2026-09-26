@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/pet.dart';
-import '../../domain/pet_age.dart';
+import '../../domain/entities/pet.dart';
+import '../../domain/logic/pet_age.dart';
 import 'pet_avatar.dart';
 
 class PetCard extends StatelessWidget {
