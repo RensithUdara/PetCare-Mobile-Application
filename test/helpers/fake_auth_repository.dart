@@ -74,4 +74,26 @@ class FakeAuthRepository implements AuthRepository {
     calls.add('signOut');
     _setUser(null);
   }
+
+  @override
+  bool usesPassword = true;
+
+  @override
+  Future<void> reauthenticate({String? password}) async {
+    calls.add('reauth:$password');
+    _maybeFail();
+  }
+
+  @override
+  Future<void> changePassword({required String currentPassword, required String newPassword}) async {
+    calls.add('changePassword:$currentPassword:$newPassword');
+    _maybeFail();
+  }
+
+  @override
+  Future<void> deleteCurrentUser() async {
+    calls.add('deleteUser');
+    _maybeFail();
+    _setUser(null);
+  }
 }
