@@ -136,6 +136,21 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
             textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
         ),
+        // Plain IconButtons / popup menus in page bars get the glass look.
+        iconButtonTheme: _page
+            ? IconButtonThemeData(
+                style: IconButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.white.withValues(alpha: 0.18),
+                  disabledForegroundColor: Colors.white54,
+                  fixedSize: const Size.square(44),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    side: BorderSide(color: Colors.white.withValues(alpha: 0.35)),
+                  ),
+                ),
+              )
+            : null,
         tabBarTheme: theme.tabBarTheme.copyWith(
           labelColor: Colors.white,
           unselectedLabelColor: white70,
