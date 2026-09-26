@@ -120,9 +120,12 @@ class GradientHeader extends StatelessWidget {
           Positioned(right: 60, bottom: -50, child: _Bubble(size: 110, opacity: 0.08)),
           Padding(
             padding: padding,
-            child: DefaultTextStyle.merge(
+            child: SizedBox(
+              width: double.infinity,
+              child: DefaultTextStyle.merge(
               style: const TextStyle(color: Colors.white),
-              child: IconTheme.merge(data: const IconThemeData(color: Colors.white), child: child),
+                child: IconTheme.merge(data: const IconThemeData(color: Colors.white), child: child),
+              ),
             ),
           ),
         ],
