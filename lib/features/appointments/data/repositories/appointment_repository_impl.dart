@@ -36,22 +36,25 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
   @override
   Future<void> save(Appointment appointment) {
     assert(!appointment.isNew, 'Appointment id must be set before saving');
-    return guardFirebase(
+    return guardFirebaseWrite(
       () => _remote.save(AppointmentModel.fromEntity(appointment)),
+      label: 'Save appointment',
       message: 'Could not save appointment. Please try again.',
     );
   }
 
   @override
-  Future<void> delete(String ownerId, String appointmentId) => guardFirebase(
+  Future<void> delete(String ownerId, String appointmentId) => guardFirebaseWrite(
         () => _remote.delete(ownerId, appointmentId),
+        label: 'Delete appointment',
         message: 'Could not delete appointment. Please try again.',
       );
 
   @override
   Future<void> deleteAllForPet({required String ownerId, required String petId}) =>
-      guardFirebase(
+      guardFirebaseWrite(
         () => _remote.deleteAllForPet(ownerId, petId),
+        label: 'Delete appointments',
         message: 'Could not delete this pet’s appointments. Please try again.',
       );
 }

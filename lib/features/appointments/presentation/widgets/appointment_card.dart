@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../domain/entities/appointment.dart';
 import '../../domain/entities/appointment_overview.dart';
+import '../../../sync/presentation/widgets/sync_widgets.dart';
 import 'appointment_status_badge.dart';
 
 class AppointmentCard extends StatelessWidget {
@@ -49,6 +50,7 @@ class AppointmentCard extends StatelessWidget {
                         ),
                       ],
                     ),
+                    PendingSyncBadge(id: a.id),
                     const SizedBox(height: 2),
                     Text(DateFormat.jm().format(a.dateTime), style: muted),
                     if (a.clinic != null || a.reason != null)
