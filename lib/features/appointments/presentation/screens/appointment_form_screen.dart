@@ -5,13 +5,19 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/domain/reminder_offset.dart';
 import '../../../../core/errors/failure.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/clock.dart';
+import '../../../../core/widgets/app_dialogs.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/date_field.dart';
+import '../../../../core/widgets/form_widgets.dart';
+import '../../../../core/widgets/modern_widgets.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../core/widgets/suggestion_field.dart';
 import '../../../../core/widgets/time_field.dart';
 import '../../../clinics/presentation/providers/clinic_providers.dart';
-import '../../../pets/presentation/widgets/pet_selector.dart';
+import '../../../pets/presentation/providers/pet_providers.dart';
+import '../../../pets/presentation/widgets/pet_choice_field.dart';
 import '../../domain/entities/appointment.dart';
 import '../controllers/appointment_editor_controller.dart';
 import '../providers/appointment_providers.dart';
@@ -37,7 +43,7 @@ class AppointmentFormScreen extends ConsumerWidget {
               const Scaffold(body: ErrorView(message: 'Could not load this appointment.')),
           data: (a) => a == null
               ? Scaffold(
-                  appBar: AppBar(),
+                  appBar: const BrandAppBar.page(title: 'Appointment'),
                   body: const EmptyState(icon: Icons.search_off, title: 'Appointment not found'),
                 )
               : _AppointmentForm(initial: a, petId: a.petId),
@@ -105,11 +111,18 @@ class _AppointmentFormState extends ConsumerState<_AppointmentForm> {
     final id = await ref.read(appointmentEditorControllerProvider.notifier).save(appointment);
     if (id == null || !mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(_isEditing ? 'Appointment updated' : 'Appointment scheduled'),
-    ));
-    context.pop();
+    await showSuccessDialog(
+      context,
+      title: _isEditing ? 'Appointment updated' : 'Appointment scheduled',
+      message: '${appointment.type.label} on ${DateFormat.yMMMEd().add_jm().format(appointment.dateTime)}.',
+    );
+    if (mounted) context.pop();
   }
+
+  static String _shortLabel(AppointmentType t) => switch (t) {
+        AppointmentType.routineCheckup => 'Checkup',
+        _ => t.label,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -124,143 +137,239 @@ class _AppointmentFormState extends ConsumerState<_AppointmentForm> {
     final busy = ref.watch(appointmentEditorControllerProvider).isLoading;
     final theme = Theme.of(context);
     final now = ref.watch(clockProvider)();
+    final pets = ref.watch(petsProvider).value ?? const [];
+    final pet = pets.where((p) => p.id == _petId).firstOrNull;
     final reminderAt = _dateTime == null || _reminder == null
         ? null
         : Appointment(ownerId: '', petId: '', dateTime: _dateTime!, reminder: _reminder)
             .reminderDate;
-    const gap = SizedBox(height: 16);
+    final white80 = Colors.white.withValues(alpha: 0.85);
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? 'Edit Appointment' : 'New Appointment')),
+      appBar: BrandAppBar.page(title: _isEditing ? 'Edit Appointment' : 'New Appointment'),
+      bottomNavigationBar: FormSaveBar(
+        label: _isEditing ? 'Save Changes' : 'Schedule Appointment',
+        icon: _isEditing ? Icons.check_rounded : Icons.event_available_rounded,
+        busy: busy,
+        busyLabel: 'Saving…',
+        onPressed: _save,
+      ),
       body: AbsorbPointer(
         absorbing: busy,
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
             children: [
-              PetSelector(
-                value: _petId,
-                // Moving an appointment to another pet is not supported.
-                enabled: !_isEditing,
-                onChanged: (id) => setState(() => _petId = id),
-              ),
-              gap,
-              Text('Type', style: theme.textTheme.labelLarge),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final t in AppointmentType.values)
-                    ChoiceChip(
-                      avatar: Icon(t.icon, size: 18),
-                      label: Text(t.label),
-                      selected: _type == t,
-                      onSelected: (_) => setState(() => _type = t),
+              // Live summary of the visit being booked.
+              GradientHeader(
+                floating: true,
+                gradient: FeatureAccent.appointments.gradient,
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
+                      ),
+                      child: Icon(_type.icon, color: Colors.white, size: 32),
                     ),
-                ],
-              ),
-              gap,
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: DateField(
-                      label: 'Date *',
-                      initialValue: _date,
-                      firstDate: DateTime(now.year - 5),
-                      lastDate: DateTime(now.year + 5),
-                      clearable: false,
-                      validator: (d) => d == null ? 'Date is required' : null,
-                      onChanged: (d) => setState(() => _date = d),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${_type.label}${pet == null ? '' : ' · ${pet.name}'}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleMedium
+                                ?.copyWith(color: Colors.white, fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Icon(Icons.event_rounded, size: 16, color: white80),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: Text(
+                                  _date == null
+                                      ? 'Pick a date'
+                                      : DateFormat.yMMMEd().format(_date!),
+                                  style: theme.textTheme.bodyMedium?.copyWith(color: white80),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Icon(Icons.schedule_rounded, size: 16, color: white80),
+                              const SizedBox(width: 6),
+                              Text(
+                                _time == null ? 'Pick a time' : _time!.format(context),
+                                style: theme.textTheme.bodyMedium?.copyWith(color: white80),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TimeField(
-                      label: 'Time *',
-                      initialValue: _time,
-                      validator: (t) => t == null ? 'Time is required' : null,
-                      onChanged: (t) => setState(() => _time = t),
-                    ),
-                  ),
-                ],
-              ),
-              if (!_isEditing && _dateTime != null && _dateTime!.isBefore(now))
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    'This date is in the past — it will be saved as a completed visit.',
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                  ),
+                  ],
                 ),
-              gap,
-              DropdownButtonFormField<ReminderOffset?>(
-                initialValue: _reminder,
-                onChanged: (r) => setState(() => _reminder = r),
-                decoration: InputDecoration(
-                  labelText: 'Reminder',
-                  prefixIcon: const Icon(Icons.notifications_outlined),
-                  helperText: reminderAt == null
-                      ? null
-                      : 'We’ll remind you ${DateFormat.MMMd().add_jm().format(reminderAt)}',
-                ),
-                items: [
-                  const DropdownMenuItem(value: null, child: Text('No reminder')),
-                  for (final r in ReminderOffset.values)
-                    DropdownMenuItem(
-                      value: r,
-                      child: Text(r == ReminderOffset.onTheDay ? '2 hours before' : r.label),
-                    ),
+              ),
+              FormSection(
+                title: 'Which pet?',
+                icon: Icons.pets,
+                accent: FeatureAccent.pets,
+                subtitle: _isEditing ? 'An appointment can’t be moved to another pet.' : null,
+                children: [
+                  PetChoiceField(
+                    value: _petId,
+                    enabled: !_isEditing,
+                    onChanged: (id) => setState(() => _petId = id),
+                  ),
                 ],
               ),
-              const SizedBox(height: 24),
-              Text('Where & who', style: theme.textTheme.titleSmall),
-              const SizedBox(height: 12),
-              SuggestionField(
-                controller: _clinic,
-                suggestions: ref.watch(clinicNameSuggestionsProvider),
-                label: 'Clinic',
+              FormSection(
+                title: 'Visit type',
+                icon: Icons.medical_services_outlined,
+                accent: FeatureAccent.appointments,
+                children: [
+                  TileGrid(
+                    children: [
+                      for (final t in AppointmentType.values)
+                        SelectTile(
+                          label: _shortLabel(t),
+                          icon: t.icon,
+                          accent: FeatureAccent.appointments,
+                          selected: _type == t,
+                          onTap: () => setState(() => _type = t),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+              FormSection(
+                title: 'When',
+                icon: Icons.event_outlined,
+                accent: FeatureAccent.calendar,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: DateField(
+                          label: 'Date *',
+                          initialValue: _date,
+                          firstDate: DateTime(now.year - 5),
+                          lastDate: DateTime(now.year + 5),
+                          clearable: false,
+                          validator: (d) => d == null ? 'Date is required' : null,
+                          onChanged: (d) => setState(() => _date = d),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TimeField(
+                          label: 'Time *',
+                          initialValue: _time,
+                          validator: (t) => t == null ? 'Time is required' : null,
+                          onChanged: (t) => setState(() => _time = t),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (!_isEditing && _dateTime != null && _dateTime!.isBefore(now))
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: FeatureAccent.documents.color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.history_rounded, color: FeatureAccent.documents.deep),
+                          const SizedBox(width: 10),
+                          const Expanded(
+                            child: Text('This date is in the past — it will be saved as a completed visit.'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  DropdownButtonFormField<ReminderOffset?>(
+                    initialValue: _reminder,
+                    isExpanded: true,
+                    onChanged: (r) => setState(() => _reminder = r),
+                    decoration: InputDecoration(
+                      labelText: 'Reminder',
+                      prefixIcon: const Icon(Icons.notifications_outlined),
+                      helperText: reminderAt == null
+                          ? null
+                          : 'We’ll remind you ${DateFormat.MMMd().add_jm().format(reminderAt)}',
+                    ),
+                    items: [
+                      const DropdownMenuItem(value: null, child: Text('No reminder')),
+                      for (final r in ReminderOffset.values)
+                        DropdownMenuItem(
+                          value: r,
+                          child: Text(r == ReminderOffset.onTheDay ? '2 hours before' : r.label),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+              FormSection(
+                title: 'Where & who',
                 icon: Icons.local_hospital_outlined,
+                accent: FeatureAccent.clinics,
+                children: [
+                  SuggestionField(
+                    controller: _clinic,
+                    suggestions: ref.watch(clinicNameSuggestionsProvider),
+                    label: 'Clinic',
+                    icon: Icons.local_hospital_outlined,
+                  ),
+                  SuggestionField(
+                    controller: _vet,
+                    suggestions: ref.watch(vetNameSuggestionsProvider),
+                    label: 'Veterinarian',
+                    icon: Icons.person_outline,
+                  ),
+                  TextFormField(
+                    controller: _reason,
+                    textCapitalization: TextCapitalization.sentences,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(
+                      labelText: 'Reason',
+                      hintText: 'e.g. Annual checkup, limping',
+                      prefixIcon: Icon(Icons.info_outline),
+                    ),
+                  ),
+                ],
               ),
-              gap,
-              SuggestionField(
-                controller: _vet,
-                suggestions: ref.watch(vetNameSuggestionsProvider),
-                label: 'Veterinarian',
-                icon: Icons.person_outline,
-              ),
-              gap,
-              TextFormField(
-                controller: _reason,
-                textCapitalization: TextCapitalization.sentences,
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Reason',
-                  prefixIcon: Icon(Icons.info_outline),
-                ),
-              ),
-              gap,
-              TextFormField(
-                controller: _notes,
-                minLines: 3,
-                maxLines: 6,
-                maxLength: 500,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(labelText: 'Notes', alignLabelWithHint: true),
-              ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: busy ? null : _save,
-                child: busy
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2.5),
-                      )
-                    : Text(_isEditing ? 'Save Changes' : 'Schedule Appointment'),
+              FormSection(
+                title: 'Notes',
+                icon: Icons.sticky_note_2_outlined,
+                accent: FeatureAccent.documents,
+                children: [
+                  TextFormField(
+                    controller: _notes,
+                    minLines: 3,
+                    maxLines: 6,
+                    maxLength: 500,
+                    textCapitalization: TextCapitalization.sentences,
+                    decoration: const InputDecoration(
+                      labelText: 'Notes',
+                      hintText: 'Questions to ask, things to bring…',
+                      alignLabelWithHint: true,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
