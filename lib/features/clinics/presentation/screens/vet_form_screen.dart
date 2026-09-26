@@ -172,6 +172,7 @@ class _VetFormState extends ConsumerState<_VetForm> {
               // Live preview of the contact card.
               GradientHeader(
                 floating: true,
+                margin: const EdgeInsets.only(top: 16),
                 gradient: accent.gradient,
                 padding: const EdgeInsets.all(20),
                 child: Row(
