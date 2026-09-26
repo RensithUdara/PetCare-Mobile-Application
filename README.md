@@ -93,6 +93,25 @@ its vets but unlinks them.
    `cd functions && npm install && cd .. && firebase deploy --only functions,firestore:indexes`
    (the collection-group indexes on `reminderAt` live in `firestore.indexes.json`).
 
+## Offline mode & sync
+
+- **Reads:** Firestore's persistent cache (unlimited size, set in `main.dart`) serves everything the
+  user has viewed, so the app works offline.
+- **Writes:** Firestore applies writes to the local cache instantly, but its futures only complete
+  when the *server* confirms. Repositories therefore write through `guardFirebaseWrite`
+  (`core/errors`), backed by `PendingWriteTracker` (`core/sync`): a write not confirmed within ~2 s
+  (or immediately when known offline) is tracked as **pending** and the UI moves on. If the server
+  later rejects it, it becomes a **failed** change with **Retry / Dismiss**.
+- **Status UI** (`features/sync`): a banner in the tab shell shows *offline*, *syncing N changes* or
+  *N changes couldn't be saved*; cards show a **Pending sync** badge using Firestore's
+  `hasPendingWrites` metadata.
+- **Uploads** (pet photos, documents) need a connection and are refused offline with a clear message.
+- Connectivity comes from `connectivity_plus` (network presence, not guaranteed internet reachability —
+  the write tracker covers that gap).
+
+We deliberately use Firestore's built-in offline engine instead of a second local database (Isar/Hive):
+one source of truth, no hand-written conflict resolution.
+
 ## QR Pet ID & emergency profile
 
 - Private settings: `users/{uid}/emergencyProfiles/{petId}` (what to share, contact, warnings).
@@ -198,7 +217,7 @@ lib/
 - [x] Phase 10a — clinics & veterinarians, maps, nearby search (REST/Dio), directions
 - [x] Phase 10b — weight tracking (log, fl_chart trend, ranges, history, pet profile sync)
 - [x] Phase 10c — QR pet ID, emergency profile (public web page + App Links), deep links
-- [ ] Phase 10d — offline mode & sync status
+- [x] Phase 10d — offline mode & sync status (pending/failed writes, retry, banner, badges)
 
 ## Tests
 
