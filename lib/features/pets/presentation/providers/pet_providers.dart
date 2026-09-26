@@ -8,6 +8,7 @@ import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../../documents/presentation/providers/document_providers.dart';
 import '../../../emergency/presentation/providers/emergency_providers.dart';
 import '../../../medications/presentation/providers/medication_providers.dart';
+import '../../../sharing/presentation/providers/sharing_providers.dart';
 import '../../../vaccinations/presentation/providers/vaccination_providers.dart';
 import '../../../weight/presentation/providers/weight_providers.dart';
 import '../../data/datasources/pet_remote_data_source.dart';
