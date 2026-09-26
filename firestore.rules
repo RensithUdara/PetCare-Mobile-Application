@@ -1,23 +1,115 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ── Roles ──────────────────────────────────────────────────────────
+    // Roles are Firebase Auth custom claims (`role: 'admin' | 'doctor'`),
+    // set only by Cloud Functions — users can never grant themselves one.
+    // Everyone else is a pet owner.
+    function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && request.auth.token.role == 'admin'; }
+    function isDoctor() { return signedIn() && request.auth.token.role == 'doctor'; }
+
+    // Share ids are deterministic: `{ownerId}_{petId}_{doctorId}`.
+    function shareId(ownerId, petId, doctorId) { return ownerId + '_' + petId + '_' + doctorId; }
+    function sharedWithMe(ownerId, petId) {
+      return isDoctor()
+          && exists(/databases/$(database)/documents/shares/$(shareId(ownerId, petId, request.auth.uid)));
+    }
+
+    // Records a doctor may read for a shared pet, and the ones they may add.
+    function readableRecord(collection) {
+      return collection in ['vaccinations', 'appointments', 'medications', 'documents', 'weights'];
+    }
+    function writableRecord(collection) {
+      return collection in ['vaccinations', 'appointments', 'medications'];
+    }
+
+    // ── Owner data ─────────────────────────────────────────────────────
     // Each user can only read and write their own profile and everything
     // nested beneath it (pets, vaccinations, appointments, ...).
     match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if signedIn() && request.auth.uid == userId;
     }
 
+    // Admins may read profile documents (not the pets and records below).
+    match /users/{userId} {
+      allow read: if isAdmin();
+    }
+
+    // Doctors: a pet shared with them, and that pet's records.
+    match /users/{userId}/pets/{petId} {
+      allow get: if sharedWithMe(userId, petId);
+    }
+    match /users/{userId}/{collection}/{recordId} {
+      allow read: if readableRecord(collection) && sharedWithMe(userId, resource.data.petId);
+
+      // Doctors add records (they appear in the owner's app) but never
+      // delete; they may only edit records they added themselves.
+      allow create: if writableRecord(collection)
+                    && sharedWithMe(userId, request.resource.data.petId)
+                    && request.resource.data.ownerId == userId
+                    && request.resource.data.addedByUid == request.auth.uid;
+      allow update: if writableRecord(collection)
+                    && sharedWithMe(userId, resource.data.petId)
+                    && resource.data.addedByUid == request.auth.uid
+                    && request.resource.data.addedByUid == request.auth.uid
+                    && request.resource.data.petId == resource.data.petId
+                    && request.resource.data.ownerId == userId;
+    }
+
+    // ── Doctors ────────────────────────────────────────────────────────
+    // A doctor's public profile / application. `status` and `doctorCode`
+    // are only ever set by the reviewDoctor Cloud Function.
+    match /doctors/{doctorId} {
+      allow get: if signedIn()
+                 && (request.auth.uid == doctorId || isAdmin() || resource.data.status == 'approved');
+      // Owners look doctors up by code; the query must ask for approved ones.
+      allow list: if isAdmin() || (signedIn() && resource.data.status == 'approved');
+
+      allow create: if signedIn()
+                    && request.auth.uid == doctorId
+                    && request.resource.data.uid == doctorId
+                    && request.resource.data.status == 'pending'
+                    && !('doctorCode' in request.resource.data);
+      allow update: if signedIn()
+                    && request.auth.uid == doctorId
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['fullName', 'phone', 'clinicName', 'specialization', 'licenseNumber',
+                                   'city', 'bio', 'photoUrl', 'updatedAt']);
+      allow delete: if isAdmin();
+    }
+
+    // ── Shares: owner → doctor access to one pet ───────────────────────
+    match /shares/{id} {
+      allow read: if signedIn()
+                  && (resource.data.ownerId == request.auth.uid
+                      || resource.data.doctorId == request.auth.uid
+                      || isAdmin());
+      allow create: if signedIn()
+                    && request.resource.data.ownerId == request.auth.uid
+                    && id == shareId(request.auth.uid, request.resource.data.petId, request.resource.data.doctorId)
+                    && exists(/databases/$(database)/documents/users/$(request.auth.uid)/pets/$(request.resource.data.petId))
+                    && get(/databases/$(database)/documents/doctors/$(request.resource.data.doctorId)).data.status == 'approved';
+      // The owner revokes; a doctor can also remove a patient from their list.
+      allow delete: if signedIn()
+                    && (resource.data.ownerId == request.auth.uid
+                        || resource.data.doctorId == request.auth.uid
+                        || isAdmin());
+    }
+
+    // ── Public QR pages ────────────────────────────────────────────────
     // Emergency profiles behind pet QR codes: world-readable, owner-writable.
     // Only fields the owner chose to share are ever written here.
     match /publicProfiles/{publicId} {
       allow read: if true;
-      allow create: if request.auth != null
+      allow create: if signedIn()
                     && request.resource.data.ownerId == request.auth.uid
                     && request.resource.data.publicId == publicId;
-      allow update: if request.auth != null
+      allow update: if signedIn()
                     && resource.data.ownerId == request.auth.uid
                     && request.resource.data.ownerId == request.auth.uid;
-      allow delete: if request.auth != null
+      allow delete: if signedIn()
                     && (resource == null || resource.data.ownerId == request.auth.uid);
     }
   }
