@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/failure.dart';
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/widgets/app_dialogs.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../domain/entities/clinic.dart';
 import '../controllers/clinic_editor_controller.dart';
@@ -20,12 +22,12 @@ class ClinicDetailsScreen extends ConsumerWidget {
     return ref.watch(clinicProvider(clinicId)).when(
           loading: () => const Scaffold(body: LoadingView()),
           error: (_, _) => Scaffold(
-            appBar: AppBar(),
+            appBar: const BrandAppBar.page(title: 'Clinic'),
             body: const ErrorView(message: 'Could not load this clinic.'),
           ),
           data: (c) => c == null
               ? Scaffold(
-                  appBar: AppBar(),
+                  appBar: const BrandAppBar.page(title: 'Clinic'),
                   body: const EmptyState(icon: Icons.search_off, title: 'Clinic not found'),
                 )
               : _Details(clinic: c),
@@ -39,34 +41,21 @@ class _Details extends ConsumerWidget {
   final Clinic clinic;
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        final scheme = Theme.of(context).colorScheme;
-        return AlertDialog(
-          title: Text('Delete ${clinic.name}?'),
-          content: const Text('Veterinarians at this clinic are kept but no longer linked to it.'),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(0, 40),
-                backgroundColor: scheme.error,
-                foregroundColor: scheme.onError,
-              ),
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Delete'),
-            ),
-          ],
-        );
-      },
+    final confirmed = await showConfirmDialog(
+      context,
+      title: 'Delete ${clinic.name}?',
+      message: 'Veterinarians at this clinic are kept but no longer linked to it.',
+      confirmLabel: 'Delete',
+      icon: Icons.delete_outline_rounded,
+      destructive: true,
     );
-    if (confirmed != true || !context.mounted) return;
+    if (!confirmed || !context.mounted) return;
     final router = GoRouter.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    final navContext = Navigator.of(context, rootNavigator: true).context;
     if (await ref.read(clinicEditorControllerProvider.notifier).deleteClinic(clinic.id)) {
       router.pop();
-      messenger.showSnackBar(SnackBar(content: Text('${clinic.name} deleted')));
+      if (navContext.mounted) await showSuccessDialog(navContext, title: '${clinic.name} deleted');
     } else {
       final error = ref.read(clinicEditorControllerProvider).error;
       messenger.showSnackBar(SnackBar(
@@ -92,8 +81,8 @@ class _Details extends ConsumerWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(clinic.name, overflow: TextOverflow.ellipsis),
+      appBar: BrandAppBar.page(
+        title: clinic.name,
         actions: [
           IconButton(
             tooltip: clinic.isFavorite ? 'Remove from favourites' : 'Add to favourites',
