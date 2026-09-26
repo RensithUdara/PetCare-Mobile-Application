@@ -113,6 +113,7 @@ class _SharingBodyState extends ConsumerState<_SharingBody> {
         children: [
           GradientHeader(
             floating: true,
+            margin: const EdgeInsets.only(top: 16),
             gradient: FeatureAccent.clinics.gradient,
             padding: const EdgeInsets.all(20),
             child: Row(
