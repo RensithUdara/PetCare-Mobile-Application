@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:petcare/core/errors/failure.dart';
-import 'package:petcare/features/pets/domain/pet.dart';
-import 'package:petcare/features/pets/domain/pet_repository.dart';
+import 'package:petcare/features/pets/domain/entities/pet.dart';
+import 'package:petcare/features/pets/domain/repositories/pet_repository.dart';
 
 /// In-memory [PetRepository] for tests.
 class FakePetRepository implements PetRepository {

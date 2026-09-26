@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:petcare/core/errors/failure.dart';
-import 'package:petcare/features/authentication/domain/app_user.dart';
-import 'package:petcare/features/authentication/domain/auth_repository.dart';
+import 'package:petcare/features/authentication/domain/entities/app_user.dart';
+import 'package:petcare/features/authentication/domain/repositories/auth_repository.dart';
 
 /// In-memory [AuthRepository] that records calls and can be told to fail.
 class FakeAuthRepository implements AuthRepository {
