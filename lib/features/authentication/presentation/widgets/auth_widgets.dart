@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/failure.dart';
-import '../auth_controller.dart';
+import '../controllers/auth_controller.dart';
 
 /// Scrollable page layout shared by login, register and forgot-password.
 class AuthScaffold extends StatelessWidget {
