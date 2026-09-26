@@ -47,6 +47,29 @@ Individual doses are **not** stored — they are computed from the schedule
 
 Deleting a pet deletes its vaccinations, appointments and medications.
 
+## Reminders & notifications
+
+- **Local notifications (primary).** `features/notifications/domain/logic/reminder_planner.dart`
+  turns records into the reminders that should be pending on this device — vaccination due dates,
+  appointments and medication doses (next 3 days), capped at 60 (iOS allows 64). A
+  `ReminderSyncController` re-plans and replaces the device schedule whenever data or settings
+  change. Works offline and needs no paid Firebase plan. Android uses inexact alarms, so a
+  reminder may arrive a few minutes late while the phone is idle.
+- **Push fallback (optional).** Each device registers `users/{uid}/devices/{fcmToken}` with
+  `lastSyncedAt`. The Cloud Function `sendDueReminders` (`functions/`, every 15 min) pushes
+  vaccination/appointment reminders **only** to users with no device synced in the last 7 days,
+  so active devices never get duplicates. Medication doses are local-only.
+- Tapping a notification opens the record in the Home tab (also from a cold start).
+- Settings: Profile → Notifications (master switch, per-category switches, test notification).
+
+### Setup for push (optional)
+
+1. **iOS:** enable *Push Notifications* and *Background Modes → Remote notifications* in Xcode, and
+   upload an APNs key in Firebase console → Project settings → Cloud Messaging.
+2. **Functions** (requires the Blaze plan):
+   `cd functions && npm install && cd .. && firebase deploy --only functions,firestore:indexes`
+   (the collection-group indexes on `reminderAt` live in `firestore.indexes.json`).
+
 ## Code generation
 
 Models use Freezed + json_serializable. After changing a model:
@@ -124,7 +147,8 @@ lib/
 - [x] Phase 5 — appointments (schedule, complete, cancel, history) and calendar
 - [x] Phase 6 — medications (dosage, frequency, course dates, dose times, stop) + calendar doses
 - [x] Phase 7 — home dashboard (alerts, pet summaries, today's doses, upcoming, recent activity)
-- [ ] Phase 8+ — notifications, documents, …
+- [x] Phase 8 — notifications (local reminders, FCM, settings, Cloud Functions fallback)
+- [ ] Phase 9+ — medical documents, …
 
 ## Tests
 
