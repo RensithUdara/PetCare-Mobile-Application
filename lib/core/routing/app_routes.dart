@@ -28,6 +28,11 @@ abstract final class AppRoutes {
   static String medications(String petId) => '/pets/$petId/medications';
   static String medicationDetails(String petId, String id) => '/pets/$petId/medications/$id';
 
+  // ── Home tab ───────────────────────────────────────────────────────────
+  static String homeAppointment(String id) => '/home/appointment/$id';
+  static String homeVaccination(String id) => '/home/vaccination/$id';
+  static String homeMedication(String id) => '/home/medication/$id';
+
   // ── Calendar tab ───────────────────────────────────────────────────────
   static String calendarAppointment(String id) => '/calendar/appointment/$id';
   static String calendarVaccination(String id) => '/calendar/vaccination/$id';

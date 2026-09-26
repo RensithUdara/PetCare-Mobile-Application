@@ -60,7 +60,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => MainShell(navigationShell: shell),
         branches: [
-          _branch(_route(AppRoutes.home, (_) => const HomeScreen())),
+          _branch(_homeRoute),
           _branch(_petsRoute),
           _branch(_calendarRoute),
           _branch(_route(AppRoutes.clinics, (_) => const ClinicsScreen())),
@@ -126,15 +126,25 @@ final _petsRoute = _route(
   ],
 );
 
+/// `/home`, `/home/{appointment,vaccination,medication}/:id`
+final _homeRoute = _route(
+  AppRoutes.home,
+  (_) => const HomeScreen(),
+  routes: _recordDetailRoutes,
+);
+
+/// Details of any health record, opened from within a tab.
+final _recordDetailRoutes = [
+  _route('appointment/:id', (s) => AppointmentDetailsScreen(appointmentId: s.param('id'))),
+  _route('vaccination/:id', (s) => VaccinationDetailsScreen(vaccinationId: s.param('id'))),
+  _route('medication/:id', (s) => MedicationDetailsScreen(medicationId: s.param('id'))),
+];
+
 /// `/calendar`, `/calendar/{appointment,vaccination,medication}/:id`
 final _calendarRoute = _route(
   AppRoutes.calendar,
   (_) => const CalendarScreen(),
-  routes: [
-    _route('appointment/:id', (s) => AppointmentDetailsScreen(appointmentId: s.param('id'))),
-    _route('vaccination/:id', (s) => VaccinationDetailsScreen(vaccinationId: s.param('id'))),
-    _route('medication/:id', (s) => MedicationDetailsScreen(medicationId: s.param('id'))),
-  ],
+  routes: _recordDetailRoutes,
 );
 
 /// Full-screen forms, reachable from any tab.
