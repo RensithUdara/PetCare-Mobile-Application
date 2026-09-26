@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/modern_widgets.dart';
 import '../providers/emergency_providers.dart';
 
 /// Pet profile row linking to the emergency profile / QR ID.
@@ -21,7 +23,7 @@ class PetEmergencyTile extends ConsumerWidget {
       final s => '${s.publicId} · Public profile off',
     };
     return ListTile(
-      leading: const Icon(Icons.qr_code_2),
+      leading: const IconBadge(icon: Icons.qr_code_2, accent: FeatureAccent.emergency),
       title: const Text('Emergency profile & QR ID'),
       subtitle: Text(subtitle),
       trailing: const Icon(Icons.chevron_right),

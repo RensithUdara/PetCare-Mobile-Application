@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/modern_widgets.dart';
 import '../../domain/entities/vaccination_overview.dart';
 import '../providers/vaccination_providers.dart';
 import 'vaccination_status_badge.dart';
@@ -44,13 +46,16 @@ class PetVaccinationsTile extends ConsumerWidget {
     }
 
     return ListTile(
-      leading: const Icon(Icons.vaccines_outlined),
+      leading: const IconBadge(icon: Icons.vaccines_outlined, accent: FeatureAccent.vaccinations),
       title: const Text('Vaccinations'),
-      subtitle: Text(subtitle),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [?trailing, const Icon(Icons.chevron_right)],
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(subtitle),
+          if (trailing != null) ...[const SizedBox(height: 6), trailing],
+        ],
       ),
+      trailing: const Icon(Icons.chevron_right),
       onTap: () => context.go(AppRoutes.vaccinations(petId)),
     );
   }

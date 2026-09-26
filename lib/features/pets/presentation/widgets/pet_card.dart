@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
+
 import '../../domain/entities/pet.dart';
 import '../../domain/logic/pet_age.dart';
 import '../../../sync/presentation/widgets/sync_widgets.dart';
@@ -25,7 +27,24 @@ class PetCard extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           child: Row(
             children: [
-              Hero(tag: 'pet-avatar-${pet.id}', child: PetAvatar.fromPet(pet, radius: 30)),
+              Hero(
+                tag: 'pet-avatar-${pet.id}',
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: AppColors.brandGradient,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: theme.cardTheme.color ?? theme.colorScheme.surface,
+                    ),
+                    child: PetAvatar.fromPet(pet, radius: 28),
+                  ),
+                ),
+              ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(

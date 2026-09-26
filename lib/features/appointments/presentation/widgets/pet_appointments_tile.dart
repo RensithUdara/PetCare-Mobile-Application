@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/modern_widgets.dart';
 import '../../domain/entities/appointment_overview.dart';
 import '../providers/appointment_providers.dart';
 import 'appointment_status_badge.dart';
@@ -41,13 +43,16 @@ class PetAppointmentsTile extends ConsumerWidget {
     }
 
     return ListTile(
-      leading: const Icon(Icons.event_outlined),
+      leading: const IconBadge(icon: Icons.event_outlined, accent: FeatureAccent.appointments),
       title: const Text('Appointments'),
-      subtitle: Text(subtitle),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [?trailing, const Icon(Icons.chevron_right)],
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(subtitle),
+          if (trailing != null) ...[const SizedBox(height: 6), trailing],
+        ],
       ),
+      trailing: const Icon(Icons.chevron_right),
       onTap: () => context.go(AppRoutes.appointments(petId)),
     );
   }
