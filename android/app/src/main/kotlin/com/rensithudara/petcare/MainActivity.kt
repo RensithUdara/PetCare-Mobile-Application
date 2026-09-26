@@ -1,4 +1,4 @@
-package com.petcare.petcare
+package com.rensithudara.petcare
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -63,6 +63,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '955690072946',
     projectId: 'petcare-20260926',
     storageBucket: 'petcare-20260926.firebasestorage.app',
-    iosBundleId: 'com.petcare.petcare',
+    iosBundleId: 'com.rensithudara.petcare',
   );
 }

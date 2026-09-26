@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.petcare.petcare</string>
+	<string>com.rensithudara.petcare</string>
 	<key>PROJECT_ID</key>
 	<string>petcare-20260926</string>
 	<key>STORAGE_BUCKET</key>

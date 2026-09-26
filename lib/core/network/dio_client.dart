@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../errors/failure.dart';
 
 /// Identifies the app to public APIs (required by OpenStreetMap services).
-const appUserAgent = 'PetCare/1.0 (com.petcare.petcare)';
+const appUserAgent = 'PetCare/1.0 (com.rensithudara.petcare)';
 
 Dio buildDio() => Dio(BaseOptions(
       connectTimeout: const Duration(seconds: 10),

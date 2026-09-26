@@ -110,7 +110,7 @@ class _PetCareMapState extends ConsumerState<PetCareMap> {
         if (tiles != null)
           TileLayer(
             urlTemplate: tiles,
-            userAgentPackageName: 'com.petcare.petcare',
+            userAgentPackageName: 'com.rensithudara.petcare',
             maxNativeZoom: 19,
             tileDisplay: const TileDisplay.fadeIn(),
           ),
