@@ -19,6 +19,7 @@ import { Button, ErrorNote, Input, Textarea } from '../../components/ui';
 import { homePathFor, useAuth } from '../../hooks/useAuth';
 import { applyAsDoctor, createProfile, errorMessage, userDoc, type DoctorApplication } from '../../lib/api';
 import { auth } from '../../lib/firebase';
+import { DemoAccounts, demoAccountsEnabled } from './DemoAccounts';
 
 function AuthShell({ title, subtitle, art, children }: { title: string; subtitle: string; art: string; children: ReactNode }) {
   return (
@@ -154,6 +155,7 @@ export function LoginPage() {
       <p className="mt-6 text-center text-sm text-slate-500">
         New to PetCare? <Link to="/register" className="font-bold text-brand-tealDeep hover:underline">Create an account</Link>
       </p>
+      {demoAccountsEnabled && <DemoAccounts />}
     </AuthShell>
   );
 }
