@@ -45,7 +45,12 @@ Medications live at `users/{uid}/medications/{id}` with `frequency`, `startDate`
 Individual doses are **not** stored — they are computed from the schedule
 (`medications/domain/logic/medication_schedule.dart`), and the calendar expands them lazily per day.
 
-Deleting a pet deletes its vaccinations, appointments and medications.
+Documents live at `users/{uid}/documents/{id}` (keyed by `petId`, optional `vaccinationId` for
+certificates) with files at `users/{uid}/pets/{petId}/documents/{id}/{fileName}` in Storage
+(images or PDFs, max 10 MB — enforced in the `AddDocument` use case and `storage.rules`).
+If writing the record fails after upload, the file is deleted again.
+
+Deleting a pet deletes its vaccinations, appointments, medications and documents (records + files).
 
 ## Reminders & notifications
 
@@ -148,7 +153,8 @@ lib/
 - [x] Phase 6 — medications (dosage, frequency, course dates, dose times, stop) + calendar doses
 - [x] Phase 7 — home dashboard (alerts, pet summaries, today's doses, upcoming, recent activity)
 - [x] Phase 8 — notifications (local reminders, FCM, settings, Cloud Functions fallback)
-- [ ] Phase 9+ — medical documents, …
+- [x] Phase 9 — medical documents (upload photo/PDF, viewer, type filter, vaccination certificates)
+- [ ] Phase 10 — maps & clinics, weight tracking, offline sync, QR pet ID, deep links, …
 
 ## Tests
 
