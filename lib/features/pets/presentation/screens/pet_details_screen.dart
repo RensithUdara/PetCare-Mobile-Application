@@ -13,6 +13,7 @@ import '../../../appointments/presentation/widgets/pet_appointments_tile.dart';
 import '../../../documents/presentation/widgets/document_widgets.dart';
 import '../../../emergency/presentation/widgets/pet_emergency_tile.dart';
 import '../../../medications/presentation/widgets/medication_widgets.dart';
+import '../../../sharing/presentation/widgets/pet_vet_access_tile.dart';
 import '../../../vaccinations/presentation/widgets/pet_vaccinations_tile.dart';
 import '../../../weight/presentation/widgets/weight_widgets.dart';
 import '../../domain/entities/pet.dart';
@@ -255,6 +256,8 @@ class _PetDetails extends ConsumerWidget {
                 PetWeightTile(petId: pet.id),
                 const Divider(height: 1),
                 PetEmergencyTile(petId: pet.id),
+                const Divider(height: 1),
+                PetVetAccessTile(petId: pet.id),
               ],
             ),
           ),

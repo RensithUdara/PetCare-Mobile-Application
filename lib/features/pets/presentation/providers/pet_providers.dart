@@ -42,6 +42,7 @@ final deletePetProvider = Provider(
     ref.watch(documentRepositoryProvider),
     ref.watch(weightRepositoryProvider),
     ref.watch(emergencyProfileRepositoryProvider),
+    ref.watch(sharingRepositoryProvider),
   ]),
 );
 
