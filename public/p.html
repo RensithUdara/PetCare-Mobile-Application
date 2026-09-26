@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <title>PetCare Emergency Profile</title>
+  <style>
+    :root {
+      --teal: #14a38b; --teal-soft: #d6f3ec; --navy: #0f2742; --muted: #5b6b7c;
+      --bg: #f6f8fa; --card: #ffffff; --danger: #b3261e; --danger-soft: #fde7e5;
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --navy: #e6edf3; --muted: #9fb0c0; --bg: #0f1418; --card: #1a2229;
+              --teal-soft: #123c35; --danger-soft: #4a1c19; --danger: #ffb4ab; color-scheme: dark; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+           background: var(--bg); color: var(--navy); }
+    main { max-width: 480px; margin: 0 auto; padding: 24px 20px 40px; }
+    header { text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+    header strong { color: var(--teal); }
+    .avatar { width: 128px; height: 128px; border-radius: 50%; margin: 0 auto; display: grid;
+              place-items: center; background: var(--teal-soft); font-size: 64px; overflow: hidden; }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    h1 { text-align: center; margin: 16px 0 0; font-size: 32px; letter-spacing: 1px; }
+    .sub { text-align: center; margin: 0; font-size: 18px; }
+    .id { text-align: center; color: var(--muted); font-size: 13px; margin-top: 4px; }
+    .card { background: var(--card); border-radius: 16px; padding: 16px; margin-top: 16px; }
+    .card h2 { margin: 0 0 4px; font-size: 15px; }
+    .card p { margin: 0; white-space: pre-wrap; }
+    .notice { background: var(--teal-soft); text-align: center; }
+    .warn { background: var(--danger-soft); color: var(--danger); }
+    .call { display: block; text-align: center; margin-top: 16px; padding: 16px; border-radius: 14px;
+            background: var(--teal); color: #fff; font-weight: 700; font-size: 18px; text-decoration: none; }
+    .phone { text-align: center; color: var(--muted); margin-top: 6px; }
+    .state { text-align: center; padding: 48px 8px; color: var(--muted); }
+    footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 32px; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+<main>
+  <header><strong>🐾 PetCare</strong> · Emergency Profile</header>
+
+  <div id="loading" class="state">Loading…</div>
+  <div id="missing" class="state" hidden>
+    <div style="font-size:48px">🐾</div>
+    <h2>Profile not available</h2>
+    <p>The owner has turned this profile off, or the code is not valid.</p>
+  </div>
+
+  <section id="profile" hidden>
+    <div class="avatar" id="avatar"></div>
+    <h1 id="name"></h1>
+    <p class="sub" id="breed"></p>
+    <p class="id" id="publicId"></p>
+
+    <div class="card notice"><p id="notice"></p></div>
+
+    <a class="call" id="call" hidden></a>
+    <p class="phone" id="phone" hidden></p>
+
+    <div class="card warn" id="warnings" hidden><h2>⚠️ Medical warnings</h2><p></p></div>
+    <div class="card" id="message" hidden><h2>From the owner</h2><p></p></div>
+    <div class="card" id="microchip" hidden><h2>Microchip ID</h2><p></p></div>
+  </section>
+
+  <footer>Shared by the pet’s owner with PetCare. Only details they chose to make public are shown.</footer>
+</main>
+
+<script>
+  // Reads publicProfiles/{id} via the Firestore REST API (world-readable per
+  // firestore.rules). Field names match PublicPetProfileModel in the app.
+  // All values are inserted with textContent — never as HTML.
+  const PROJECT = location.hostname.replace(/\.(web\.app|firebaseapp\.com)$/, '');
+  const EMOJI = { dog: '🐶', cat: '🐱', bird: '🐦', rabbit: '🐰', other: '🐾' };
+  const SPECIES = { dog: 'Dog', cat: 'Cat', bird: 'Bird', rabbit: 'Rabbit', other: 'Pet' };
+  const $ = (id) => document.getElementById(id);
+
+  function show(id, text) {
+    const el = $(id);
+    if (!text) return;
+    (el.querySelector('p') || el).textContent = text;
+    el.hidden = false;
+  }
+
+  function missing() { $('loading').hidden = true; $('missing').hidden = false; }
+
+  async function load() {
+    const match = location.pathname.match(/^\/p\/(PC-[23456789A-HJKMNP-Z]{7})\/?$/);
+    if (!match) return missing();
+    const id = match[1];
+    const url = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/publicProfiles/${id}`;
+    let res;
+    try { res = await fetch(url); } catch { return missing(); }
+    if (!res.ok) return missing();
+    const f = (await res.json()).fields || {};
+    const s = (k) => (f[k] && typeof f[k].stringValue === 'string') ? f[k].stringValue.trim() : '';
+
+    const name = s('petName');
+    const species = s('species') || 'other';
+    document.title = `${name} — PetCare Emergency Profile`;
+
+    const photo = s('photoUrl');
+    // Only accept images hosted in the app's own Firebase Storage.
+    if (photo.startsWith('https://firebasestorage.googleapis.com/')) {
+      const img = document.createElement('img');
+      img.src = photo;
+      img.alt = `Photo of ${name}`;
+      img.onerror = () => { $('avatar').textContent = EMOJI[species] || '🐾'; };
+      $('avatar').appendChild(img);
+    } else {
+      $('avatar').textContent = EMOJI[species] || '🐾';
+    }
+
+    $('name').textContent = name.toUpperCase();
+    $('breed').textContent = s('breed') || SPECIES[species] || 'Pet';
+    $('publicId').textContent = `PetCare ID ${id}`;
+    $('notice').textContent = `If you found ${name}, please contact the owner. Thank you for helping!`;
+
+    const phone = s('contactPhone');
+    if (phone) {
+      const call = $('call');
+      call.href = 'tel:' + phone.replace(/[^\d+]/g, '');
+      call.textContent = s('contactName') ? `📞 Call ${s('contactName')}` : '📞 Call owner';
+      call.hidden = false;
+      show('phone', phone);
+    }
+    show('warnings', s('medicalWarnings'));
+    show('message', s('message'));
+    show('microchip', s('microchipId'));
+
+    $('loading').hidden = true;
+    $('profile').hidden = false;
+  }
+
+  load();
+</script>
+</body>
+</html>
