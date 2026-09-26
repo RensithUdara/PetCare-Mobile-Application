@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/errors/failure.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../pets/presentation/providers/pet_providers.dart';
@@ -142,17 +143,7 @@ class _Viewer extends ConsumerWidget {
                       ),
                     ),
                   )
-                : EmptyState(
-                    icon: Icons.picture_as_pdf_outlined,
-                    title: document.fileName,
-                    message: 'PDF · ${formatBytes(document.sizeBytes)}',
-                    action: FilledButton.icon(
-                      style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
-                      onPressed: () => _openExternally(context),
-                      icon: const Icon(Icons.open_in_new),
-                      label: const Text('Open PDF'),
-                    ),
-                  ),
+                : _PdfBody(document: document, onOpenExternally: () => _openExternally(context)),
           ),
           Material(
             color: theme.colorScheme.surfaceContainer,
@@ -172,5 +163,55 @@ class _Viewer extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+/// Downloads (or reads from cache) and renders a PDF in-app, with a
+/// fallback to an external viewer.
+class _PdfBody extends ConsumerWidget {
+  const _PdfBody({required this.document, required this.onOpenExternally});
+
+  final MedicalDocument document;
+  final VoidCallback onOpenExternally;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ref.watch(documentBytesProvider(document)).when(
+          loading: () => Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text('Loading PDF · ${formatBytes(document.sizeBytes)}'),
+              ],
+            ),
+          ),
+          error: (error, _) => EmptyState(
+            icon: Icons.picture_as_pdf_outlined,
+            title: 'Couldn’t open this PDF',
+            message: error is Failure ? error.message : 'Please try again.',
+            action: Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44)),
+                  onPressed: () => ref.invalidate(documentBytesProvider(document)),
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Try again'),
+                ),
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
+                  onPressed: onOpenExternally,
+                  icon: const Icon(Icons.open_in_new),
+                  label: const Text('Open in another app'),
+                ),
+              ],
+            ),
+          ),
+          data: (bytes) => ref.watch(pdfViewBuilderProvider)(bytes),
+        );
   }
 }

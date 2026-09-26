@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/routing/app_routes.dart';
 import '../../domain/entities/medical_document.dart';
+import '../../../sync/presentation/widgets/sync_widgets.dart';
 import '../providers/document_providers.dart';
 
 extension DocumentTypeIcon on DocumentType {
@@ -93,6 +94,7 @@ class DocumentCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                     ),
+                    PendingSyncBadge(id: document.id),
                     Text(
                       '${document.type.label} · ${DateFormat.yMMMd().format(document.date)}',
                       style: theme.textTheme.bodyMedium

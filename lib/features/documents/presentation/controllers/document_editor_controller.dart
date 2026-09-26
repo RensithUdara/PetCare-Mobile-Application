@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../domain/entities/medical_document.dart';
+import '../../../sync/presentation/providers/sync_providers.dart';
 import '../providers/document_providers.dart';
 
 @immutable
@@ -32,7 +33,16 @@ class DocumentEditorController extends Notifier<DocumentEditorState> {
     String? description,
     String? vaccinationId,
   }) =>
-      _run(() => ref.read(addDocumentProvider)(
+      _run(() {
+        // Storage uploads need a connection (unlike Firestore writes).
+        if (ref.read(isOfflineProvider)) {
+          throw const Failure(
+            'You’re offline. Uploading photos and documents needs an internet connection — '
+            'try again when you’re back online.',
+            code: 'offline',
+          );
+        }
+        return ref.read(addDocumentProvider)(
             ownerId: _uid(),
             petId: petId,
             name: name,
@@ -44,7 +54,8 @@ class DocumentEditorController extends Notifier<DocumentEditorState> {
             onProgress: (p) {
               if (ref.mounted) state = DocumentEditorState(isBusy: true, uploadProgress: p);
             },
-          ));
+          );
+      });
 
   Future<bool> update(
     MedicalDocument document, {
