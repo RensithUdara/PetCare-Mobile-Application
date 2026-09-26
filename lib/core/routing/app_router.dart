@@ -41,6 +41,7 @@ import '../../features/vaccinations/presentation/screens/vaccinations_screen.dar
 import 'app_routes.dart';
 import 'main_shell.dart';
 import 'redirect.dart';
+import 'splash_timer.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   // Re-run redirects whenever auth or onboarding state changes, without
@@ -48,6 +49,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier<int>(0);
   ref.listen(authStateProvider, (_, _) => refresh.value++);
   ref.listen(onboardingCompleteProvider, (_, _) => refresh.value++);
+  ref.listen(splashTimerProvider, (_, _) => refresh.value++);
 
   final router = GoRouter(
     initialLocation: AppRoutes.splash,
@@ -57,7 +59,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final auth = ref.read(authStateProvider);
       return resolveRedirect(
         location: state.matchedLocation,
-        isAuthLoading: !auth.hasValue && !auth.hasError,
+        isAuthLoading: (!auth.hasValue && !auth.hasError) || !ref.read(splashTimerProvider).hasValue,
         onboardingComplete: ref.read(onboardingCompleteProvider),
         isLoggedIn: auth.value != null,
       );
