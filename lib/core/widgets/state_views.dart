@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
+
 /// Shown when a list or section has no data yet.
 class EmptyState extends StatelessWidget {
   const EmptyState({
@@ -24,14 +26,26 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircleAvatar(
-              radius: 36,
-              backgroundColor: theme.colorScheme.primaryContainer,
-              child: Icon(icon, size: 36, color: theme.colorScheme.primary),
+            Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: AppColors.brandGradient,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.teal.withValues(alpha: 0.35),
+                    blurRadius: 24,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Icon(icon, size: 44, color: Colors.white),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Text(title,
-                style: theme.textTheme.titleMedium, textAlign: TextAlign.center),
+                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                textAlign: TextAlign.center),
             if (message != null) ...[
               const SizedBox(height: 8),
               Text(
