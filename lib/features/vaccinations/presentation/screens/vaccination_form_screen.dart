@@ -9,6 +9,8 @@ import '../../../../core/utils/clock.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/date_field.dart';
 import '../../../../core/widgets/state_views.dart';
+import '../../../../core/widgets/suggestion_field.dart';
+import '../../../clinics/presentation/providers/clinic_providers.dart';
 import '../../../pets/domain/entities/pet.dart';
 import '../../../pets/presentation/providers/pet_providers.dart';
 import '../../domain/entities/vaccination.dart';
@@ -269,24 +271,18 @@ class _VaccinationFormState extends ConsumerState<_VaccinationForm> {
               const SizedBox(height: 24),
               Text('Administered by', style: theme.textTheme.titleSmall),
               const SizedBox(height: 12),
-              TextFormField(
+              SuggestionField(
                 controller: _vet,
-                textCapitalization: TextCapitalization.words,
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Veterinarian',
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
+                suggestions: ref.watch(vetNameSuggestionsProvider),
+                label: 'Veterinarian',
+                icon: Icons.person_outline,
               ),
               gap,
-              TextFormField(
+              SuggestionField(
                 controller: _clinic,
-                textCapitalization: TextCapitalization.words,
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Clinic',
-                  prefixIcon: Icon(Icons.local_hospital_outlined),
-                ),
+                suggestions: ref.watch(clinicNameSuggestionsProvider),
+                label: 'Clinic',
+                icon: Icons.local_hospital_outlined,
               ),
               gap,
               TextFormField(

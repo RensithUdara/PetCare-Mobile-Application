@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../domain/entities/vaccination_overview.dart';
+import '../../../sync/presentation/widgets/sync_widgets.dart';
 import 'vaccination_formatters.dart';
 import 'vaccination_status_badge.dart';
 
@@ -46,6 +47,7 @@ class VaccinationCard extends StatelessWidget {
                       v.vaccineName,
                       style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                     ),
+                    PendingSyncBadge(id: v.id),
                     const SizedBox(height: 2),
                     Text('Given ${date.format(v.dateAdministered)}', style: muted),
                     if (showCountdown)

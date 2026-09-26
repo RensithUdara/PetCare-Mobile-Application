@@ -36,22 +36,25 @@ class VaccinationRepositoryImpl implements VaccinationRepository {
   @override
   Future<void> save(Vaccination vaccination) {
     assert(!vaccination.isNew, 'Vaccination id must be set before saving');
-    return guardFirebase(
+    return guardFirebaseWrite(
       () => _remote.save(VaccinationModel.fromEntity(vaccination)),
+      label: 'Save vaccination',
       message: 'Could not save vaccination. Please try again.',
     );
   }
 
   @override
-  Future<void> delete(String ownerId, String vaccinationId) => guardFirebase(
+  Future<void> delete(String ownerId, String vaccinationId) => guardFirebaseWrite(
         () => _remote.delete(ownerId, vaccinationId),
+        label: 'Delete vaccination',
         message: 'Could not delete vaccination. Please try again.',
       );
 
   @override
   Future<void> deleteAllForPet({required String ownerId, required String petId}) =>
-      guardFirebase(
+      guardFirebaseWrite(
         () => _remote.deleteAllForPet(ownerId, petId),
+        label: 'Delete vaccinations',
         message: 'Could not delete this pet’s vaccinations. Please try again.',
       );
 }
