@@ -6,7 +6,7 @@ class ChangePassword {
 
   final AuthRepository _auth;
 
-  Future<void> call({required String currentPassword, required String newPassword}) {
+  Future<void> call({required String currentPassword, required String newPassword}) async {
     if (newPassword == currentPassword) {
       throw const Failure('Choose a password different from your current one.', code: 'same-password');
     }
