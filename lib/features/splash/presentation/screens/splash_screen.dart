@@ -84,6 +84,8 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                 width: SplashScreen.logoSize,
                 height: SplashScreen.logoSize,
                 semanticLabel: 'PetCare',
+                // Heart-only PNG if the full logo is unavailable.
+                errorBuilder: (_, _, _) => Image.asset('assets/images/app_icon.png', width: 180),
               ),
             ),
           ),
