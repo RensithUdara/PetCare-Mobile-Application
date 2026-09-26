@@ -39,6 +39,7 @@ abstract final class AppRoutes {
   static String documents(String petId) => '/pets/$petId/documents';
   static String weight(String petId) => '/pets/$petId/weight';
   static String emergency(String petId) => '/pets/$petId/emergency';
+  static String petSharing(String petId) => '/pets/$petId/sharing';
 
   // ── Full-screen viewers ────────────────────────────────────────────────
   static String documentViewer(String id) => '/view/document/$id';

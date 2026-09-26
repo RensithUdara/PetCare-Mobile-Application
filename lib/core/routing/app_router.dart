@@ -36,6 +36,7 @@ import '../../features/profile/presentation/screens/change_password_screen.dart'
 import '../../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/profile/presentation/screens/faq_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/sharing/presentation/screens/pet_sharing_screen.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
 import '../../features/vaccinations/presentation/screens/vaccination_details_screen.dart';
 import '../../features/weight/presentation/screens/weight_screen.dart';
@@ -150,6 +151,7 @@ final _petsRoute = _route(
         _route('documents', (s) => DocumentsScreen(petId: s.param('petId'))),
         _route('weight', (s) => WeightScreen(petId: s.param('petId'))),
         _route('emergency', (s) => EmergencyProfileScreen(petId: s.param('petId'))),
+        _route('sharing', (s) => PetSharingScreen(petId: s.param('petId'))),
         _route(
           'medications',
           (s) => MedicationsScreen(petId: s.param('petId')),
