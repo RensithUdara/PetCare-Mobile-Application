@@ -7,7 +7,9 @@ import '../../../../core/errors/failure.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_mode_controller.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/modern_widgets.dart';
+import '../../../home/presentation/widgets/alerts_bell.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../../notifications/presentation/controllers/reminder_sync_controller.dart';
 
@@ -28,23 +30,16 @@ class ProfileScreen extends ConsumerWidget {
         .join();
 
     return Scaffold(
+      appBar: const BrandAppBar(title: 'Profile', actions: [AlertsBellButton()]),
       body: ListView(
         padding: const EdgeInsets.only(bottom: 32),
         children: [
           GradientHeader(
-            padding: EdgeInsets.fromLTRB(
-              AppConstants.pagePadding,
-              MediaQuery.paddingOf(context).top + 20,
-              AppConstants.pagePadding,
-              28,
-            ),
+            floating: true,
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Profile',
-                    style: theme.textTheme.titleLarge
-                        ?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 20),
                 Row(
                   children: [
                     Container(
