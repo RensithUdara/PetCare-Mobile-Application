@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/failure.dart';
+import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/theme_mode_controller.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
+import '../../../notifications/presentation/controllers/reminder_sync_controller.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -49,6 +52,18 @@ class ProfileScreen extends ConsumerWidget {
             onSelectionChanged: (selection) =>
                 ref.read(themeModeProvider.notifier).setMode(selection.first),
           ),
+          const SizedBox(height: 24),
+          Text('Settings', style: theme.textTheme.titleSmall),
+          const SizedBox(height: 8),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.notifications_outlined),
+              title: const Text('Notifications'),
+              subtitle: const Text('Vaccination, appointment and medication reminders'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push(AppRoutes.notificationSettings),
+            ),
+          ),
           const SizedBox(height: 32),
           OutlinedButton.icon(
             onPressed: () => _confirmLogout(context, ref),
@@ -82,6 +97,8 @@ class ProfileScreen extends ConsumerWidget {
     if (confirmed != true) return;
 
     try {
+      // While still signed in: unregister this device and clear reminders.
+      await ref.read(reminderSyncControllerProvider.notifier).prepareSignOut();
       await ref.read(signOutProvider)();
     } on Failure catch (e) {
       if (context.mounted) {
