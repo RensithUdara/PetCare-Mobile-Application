@@ -54,7 +54,6 @@ void main() {
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
-    debugPrint('TEXTS: ${find.byType(Text).evaluate().map((e) => (e.widget as Text).data).where((t) => t != null).join(' | ')}');
 
     expect(find.text('Access granted'), findsOneWidget);
     await tester.pumpAndSettle();
