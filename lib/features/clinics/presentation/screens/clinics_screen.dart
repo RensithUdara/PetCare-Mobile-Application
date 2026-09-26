@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/state_views.dart';
+import '../../../home/presentation/widgets/alerts_bell.dart';
 import '../../domain/entities/clinic.dart';
 import '../providers/clinic_providers.dart';
 import '../widgets/clinic_widgets.dart';
@@ -39,14 +41,15 @@ class _ClinicsScreenState extends ConsumerState<ClinicsScreen> with SingleTicker
     final onVetsTab = _tabs.index == 1;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Clinics'),
+      appBar: BrandAppBar(
+        title: 'Clinics',
         actions: [
-          IconButton(
+          BrandActionButton(
             tooltip: 'Map & nearby clinics',
-            icon: const Icon(Icons.map_outlined),
+            icon: Icons.map_outlined,
             onPressed: () => context.push(AppRoutes.clinicsMap),
           ),
+          const AlertsBellButton(),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(112),
@@ -58,6 +61,7 @@ class _ClinicsScreenState extends ConsumerState<ClinicsScreen> with SingleTicker
                   controller: _search,
                   onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
                   decoration: InputDecoration(
+                    fillColor: Theme.of(context).colorScheme.surface,
                     hintText: 'Search clinics and vets',
                     prefixIcon: const Icon(Icons.search),
                     isDense: true,
@@ -76,6 +80,12 @@ class _ClinicsScreenState extends ConsumerState<ClinicsScreen> with SingleTicker
               ),
               TabBar(
                 controller: _tabs,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white.withValues(alpha: 0.75),
+                indicator: const UnderlineTabIndicator(
+                  borderSide: BorderSide(color: Colors.white, width: 3),
+                  borderRadius: BorderRadius.all(Radius.circular(3)),
+                ),
                 tabs: [
                   Tab(text: 'Clinics (${clinics.value?.length ?? 0})'),
                   Tab(text: 'Veterinarians (${vets.value?.length ?? 0})'),
