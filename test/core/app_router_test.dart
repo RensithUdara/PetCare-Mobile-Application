@@ -41,6 +41,11 @@ void main() {
       AppRoutes.vaccinationEdit('v1'),
       AppRoutes.appointmentNew(petId: 'p1', date: DateTime(2026, 10, 1)),
       AppRoutes.appointmentEdit('a1'),
+      AppRoutes.medications('p1'),
+      AppRoutes.medicationDetails('p1', 'm1'),
+      AppRoutes.calendarMedication('m1'),
+      AppRoutes.medicationNew('p1'),
+      AppRoutes.medicationEdit('m1'),
     ];
 
     for (final path in paths) {

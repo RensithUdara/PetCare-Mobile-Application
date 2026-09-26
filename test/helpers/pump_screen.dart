@@ -11,8 +11,10 @@ Future<void> pumpScreen(
   WidgetTester tester,
   Widget screen, {
   List<Override> overrides = const [],
+  // Long forms: a tall viewport keeps every lazily-built row in the tree.
+  Size physicalSize = const Size(1080, 2400),
 }) async {
-  tester.view.physicalSize = const Size(1080, 2400);
+  tester.view.physicalSize = physicalSize;
   tester.view.devicePixelRatio = 2.0;
   addTearDown(tester.view.reset);
 
