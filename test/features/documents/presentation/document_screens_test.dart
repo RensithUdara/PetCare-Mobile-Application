@@ -53,9 +53,9 @@ void main() {
         sizeBytes: 2 * 1024 * 1024,
       );
 
-  Future<void> pump(WidgetTester tester, FakeDocumentRepository repo, Widget screen) {
+  Future<void> pump(WidgetTester tester, FakeDocumentRepository repo, Widget screen, {Failure? fileFailure}) {
     picker = _FakePicker();
-    files = FakeDocumentFileRepository();
+    files = FakeDocumentFileRepository(failure: fileFailure);
     return pumpScreen(tester, screen, physicalSize: const Size(1080, 4000), overrides: [
       currentUserIdProvider.overrideWithValue('u1'),
       clockProvider.overrideWithValue(() => now),
@@ -169,9 +169,15 @@ void main() {
 
   testWidgets('viewer explains when a PDF can’t be loaded offline', (tester) async {
     final repo = FakeDocumentRepository([doc('a', 'Blood test', DocumentType.bloodTest)]);
-    await pump(tester, repo, const DocumentViewerScreen(documentId: 'a'));
-    files.failure = const Failure('This document hasn’t been downloaded to this device yet. '
-        'Connect to the internet to open it.', code: 'offline-not-cached');
+    await pump(
+      tester,
+      repo,
+      const DocumentViewerScreen(documentId: 'a'),
+      fileFailure: const Failure(
+        'This document hasn’t been downloaded to this device yet. Connect to the internet to open it.',
+        code: 'offline-not-cached',
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Couldn’t open this PDF'), findsOneWidget);
