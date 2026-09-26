@@ -1,12 +1,12 @@
 import 'package:meta/meta.dart';
 
-enum CalendarEventKind { appointment, vaccinationDue }
+enum CalendarEventKind { appointment, vaccinationDue, medication }
 
 /// Unified status across event kinds, for colouring and filtering.
 enum CalendarEventStatus { upcoming, today, overdue, needsUpdate, completed, cancelled }
 
-/// Anything that belongs on the calendar: a vet appointment or a
-/// vaccination due date (medications join in a later phase).
+/// Anything that belongs on the calendar: a vet appointment, a vaccination
+/// due date, or a day's doses of a medication.
 @immutable
 class CalendarEvent {
   const CalendarEvent({
@@ -19,6 +19,7 @@ class CalendarEvent {
     required this.status,
     this.isAllDay = false,
     this.subtitle,
+    this.doseTimes = const [],
   });
 
   final CalendarEventKind kind;
@@ -35,6 +36,9 @@ class CalendarEvent {
   final bool isAllDay;
   final CalendarEventStatus status;
 
+  /// For medication events: every dose moment on that day.
+  final List<DateTime> doseTimes;
+
   @override
   bool operator ==(Object other) =>
       other is CalendarEvent &&
@@ -46,9 +50,19 @@ class CalendarEvent {
       other.subtitle == subtitle &&
       other.dateTime == dateTime &&
       other.isAllDay == isAllDay &&
-      other.status == status;
+      other.status == status &&
+      _listEquals(other.doseTimes, doseTimes);
+
+  static bool _listEquals(List<DateTime> a, List<DateTime> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
 
   @override
   int get hashCode =>
-      Object.hash(kind, sourceId, petId, petName, title, subtitle, dateTime, isAllDay, status);
+      Object.hash(kind, sourceId, petId, petName, title, subtitle, dateTime, isAllDay, status,
+          Object.hashAll(doseTimes));
 }

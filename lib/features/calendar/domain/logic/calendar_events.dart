@@ -2,15 +2,42 @@ import '../../../../core/utils/date_utils.dart';
 import '../../../appointments/domain/entities/appointment.dart';
 import '../../../appointments/domain/entities/appointment_overview.dart';
 import '../../../appointments/domain/logic/appointment_status.dart';
+import '../../../medications/domain/entities/medication.dart';
 import '../../../pets/domain/entities/pet.dart';
 import '../../../vaccinations/domain/entities/vaccination.dart';
 import '../../../vaccinations/domain/entities/vaccination_overview.dart';
 import '../../../vaccinations/domain/logic/vaccination_status.dart';
 import '../entities/calendar_event.dart';
+import '../entities/calendar_snapshot.dart';
 
-/// Merges appointments and vaccination due dates of all [pets] into one
-/// chronologically sorted list. Records of deleted pets are skipped.
-List<CalendarEvent> buildCalendarEvents({
+/// Builds the calendar for all [pets]: appointments and vaccination due
+/// dates as dated events, medications as recurring rules. Records of
+/// deleted pets are skipped.
+CalendarSnapshot buildCalendarSnapshot({
+  required List<Pet> pets,
+  required List<Appointment> appointments,
+  required List<Vaccination> vaccinations,
+  required List<Medication> medications,
+  required DateTime now,
+}) {
+  final petNames = {for (final p in pets) p.id: p.name};
+  return CalendarSnapshot(
+    datedEvents: buildDatedEvents(
+      pets: pets,
+      appointments: appointments,
+      vaccinations: vaccinations,
+      now: now,
+    ),
+    medications: [
+      for (final m in medications)
+        if (petNames[m.petId] case final petName?) (medication: m, petName: petName),
+    ],
+    now: now,
+  );
+}
+
+/// Appointments and current vaccination due dates, chronologically sorted.
+List<CalendarEvent> buildDatedEvents({
   required List<Pet> pets,
   required List<Appointment> appointments,
   required List<Vaccination> vaccinations,
@@ -74,13 +101,4 @@ List<CalendarEvent> buildCalendarEvents({
     return a.dateTime.compareTo(b.dateTime);
   });
   return events;
-}
-
-/// Groups (already sorted) events by calendar day.
-Map<DateTime, List<CalendarEvent>> groupEventsByDay(List<CalendarEvent> events) {
-  final map = <DateTime, List<CalendarEvent>>{};
-  for (final e in events) {
-    map.putIfAbsent(dateOnly(e.dateTime), () => []).add(e);
-  }
-  return map;
 }

@@ -10,7 +10,7 @@ import '../../../../core/widgets/state_views.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../../pets/presentation/providers/pet_providers.dart';
 import '../../domain/entities/calendar_event.dart';
-import '../../domain/logic/calendar_events.dart';
+import '../../domain/entities/calendar_snapshot.dart';
 import '../providers/calendar_providers.dart';
 import '../widgets/calendar_event_tile.dart';
 
@@ -29,15 +29,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   void _open(CalendarEvent e) => context.push(switch (e.kind) {
         CalendarEventKind.appointment => AppRoutes.calendarAppointment(e.sourceId),
         CalendarEventKind.vaccinationDue => AppRoutes.calendarVaccination(e.sourceId),
+        CalendarEventKind.medication => AppRoutes.calendarMedication(e.sourceId),
       });
 
   @override
   Widget build(BuildContext context) {
-    final events = ref.watch(filteredCalendarEventsProvider);
+    final calendar = ref.watch(filteredCalendarProvider);
+    final snapshot = calendar.value ?? CalendarSnapshot.empty;
     final pets = ref.watch(petsProvider).value ?? const [];
     final petFilter = ref.watch(calendarPetFilterProvider);
-    final byDay = groupEventsByDay(events.value ?? const []);
-    final dayEvents = byDay[_selectedDay] ?? const [];
+    final dayEvents = snapshot.eventsOn(_selectedDay);
     final theme = Theme.of(context);
     final today = dateOnly(ref.watch(clockProvider)());
 
@@ -64,11 +65,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               icon: const Icon(Icons.add),
               label: const Text('Appointment'),
             ),
-      body: events.when(
+      body: calendar.when(
         loading: () => const LoadingView(),
         error: (_, _) => ErrorView(
           message: 'Could not load your calendar.',
-          onRetry: () => ref.invalidate(calendarEventsProvider),
+          onRetry: () => ref.invalidate(calendarProvider),
         ),
         data: (_) => CustomScrollView(
           slivers: [
@@ -109,7 +110,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 },
                 startingDayOfWeek: StartingDayOfWeek.monday,
                 selectedDayPredicate: (day) => isSameDay(day, _selectedDay),
-                eventLoader: (day) => byDay[dateOnly(day)] ?? const [],
+                eventLoader: snapshot.eventsOn,
                 onDaySelected: (selected, focused) => setState(() {
                   _selectedDay = dateOnly(selected);
                   _focusedDay = focused;
