@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../pets/presentation/providers/pet_providers.dart';
 import '../../domain/entities/appointment_overview.dart';
@@ -26,8 +27,8 @@ class AppointmentsScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(petName == null ? 'Appointments' : '$petName’s Appointments'),
+        appBar: BrandAppBar.page(
+          title: petName == null ? 'Appointments' : '$petName’s Appointments',
           bottom: (overview.value?.total ?? 0) > 0
               ? TabBar(tabs: [
                   Tab(text: 'Upcoming (${overview.value!.upcoming.length})'),

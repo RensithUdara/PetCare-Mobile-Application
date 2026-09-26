@@ -5,7 +5,10 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/errors/failure.dart';
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/clock.dart';
+import '../../../../core/widgets/app_dialogs.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../pets/presentation/providers/pet_providers.dart';
 import '../../domain/entities/appointment.dart';
@@ -25,12 +28,12 @@ class AppointmentDetailsScreen extends ConsumerWidget {
     return ref.watch(appointmentProvider(appointmentId)).when(
           loading: () => const Scaffold(body: LoadingView()),
           error: (_, _) => Scaffold(
-            appBar: AppBar(),
+            appBar: const BrandAppBar.page(title: 'Appointment'),
             body: const ErrorView(message: 'Could not load this appointment.'),
           ),
           data: (a) => a == null
               ? Scaffold(
-                  appBar: AppBar(),
+                  appBar: const BrandAppBar.page(title: 'Appointment'),
                   body: const EmptyState(
                     icon: Icons.search_off,
                     title: 'Appointment not found',
@@ -54,29 +57,17 @@ class _Details extends ConsumerWidget {
     required String action,
     bool destructive = false,
   }) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        final scheme = Theme.of(context).colorScheme;
-        return AlertDialog(
-          title: Text(title),
-          content: Text(message),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Back')),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(0, 40),
-                backgroundColor: destructive ? scheme.error : null,
-                foregroundColor: destructive ? scheme.onError : null,
-              ),
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(action),
-            ),
-          ],
-        );
-      },
+    final result = await showConfirmDialog(
+      context,
+      title: title,
+      message: message,
+      confirmLabel: action,
+      cancelLabel: 'Back',
+      icon: destructive ? Icons.event_busy_rounded : Icons.help_outline_rounded,
+      accent: FeatureAccent.appointments,
+      destructive: destructive,
     );
-    return result ?? false;
+    return result;
   }
 
   void _showError(BuildContext context, WidgetRef ref, String fallback) {
@@ -116,10 +107,10 @@ class _Details extends ConsumerWidget {
     }
     if (!context.mounted) return;
     final router = GoRouter.of(context);
-    final messenger = ScaffoldMessenger.of(context);
+    final navContext = Navigator.of(context, rootNavigator: true).context;
     if (await ref.read(appointmentEditorControllerProvider.notifier).delete(appointment.id)) {
       router.pop();
-      messenger.showSnackBar(const SnackBar(content: Text('Appointment deleted')));
+      if (navContext.mounted) await showSuccessDialog(navContext, title: 'Appointment deleted');
     } else if (context.mounted) {
       _showError(context, ref, 'Could not delete appointment.');
     }
@@ -151,8 +142,8 @@ class _Details extends ConsumerWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Appointment'),
+      appBar: BrandAppBar.page(
+        title: 'Appointment',
         actions: [
           if (appointment.isScheduled)
             IconButton(
