@@ -49,6 +49,7 @@ void main() {
       AppRoutes.homeAppointment('a1'),
       AppRoutes.homeVaccination('v1'),
       AppRoutes.homeMedication('m1'),
+      AppRoutes.notificationSettings,
     ];
 
     for (final path in paths) {
