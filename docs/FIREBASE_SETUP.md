@@ -123,7 +123,10 @@ Firebase Hosting serves:
 
 - Public static files.
 - Public emergency profiles.
-- Web portal under `/app`.
+- Web portal under `/app` when using Firebase Hosting.
+
+The React portal can also be hosted separately on Vercel as `pet-care-web`.
+See [Vercel Deployment](VERCEL_DEPLOYMENT.md).
 
 Deploy hosting:
 

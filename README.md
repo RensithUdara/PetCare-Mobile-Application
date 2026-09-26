@@ -69,6 +69,7 @@ PetCare/
 | Document | Purpose |
 | --- | --- |
 | [Play Store Release Guide](docs/PLAY_STORE_RELEASE.md) | Full Google Play publishing checklist and store listing draft |
+| [Vercel Deployment](docs/VERCEL_DEPLOYMENT.md) | Deploy the React web portal as `pet-care-web` on Vercel |
 | [Privacy Policy Draft](docs/PRIVACY_POLICY.md) | Draft privacy policy to review before publishing |
 | [Testing Checklist](docs/TESTING_CHECKLIST.md) | Manual and automated testing checklist |
 | [Firebase Setup](docs/FIREBASE_SETUP.md) | Firebase services, emulators, deployment, and production setup |
@@ -211,6 +212,8 @@ flutter run -d chrome
 ## 🌐 Run The Web Portal
 
 The web portal lives in `web/` and supports owner, doctor, and admin dashboards.
+It can be deployed to Vercel as `pet-care-web`, while Firebase continues to provide
+authentication, Firestore, Functions, Storage, and public emergency profile hosting.
 
 ```bash
 cd web
