@@ -6,8 +6,10 @@ import 'package:table_calendar/table_calendar.dart';
 
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/utils/clock.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../core/widgets/status_badge.dart';
+import '../../../home/presentation/widgets/alerts_bell.dart';
 import '../../../pets/presentation/providers/pet_providers.dart';
 import '../../domain/entities/calendar_event.dart';
 import '../../domain/entities/calendar_snapshot.dart';
@@ -39,14 +41,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final today = dateOnly(ref.watch(clockProvider)());
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Calendar'),
+      appBar: BrandAppBar(
+        title: 'Calendar',
         actions: [
           if (!isSameDay(_focusedDay, today) || !isSameDay(_selectedDay, today))
-            TextButton(
+            BrandActionButton(
+              icon: Icons.today_rounded,
+              tooltip: 'Today',
               onPressed: () => setState(() => _focusedDay = _selectedDay = today),
-              child: const Text('Today'),
             ),
+          const AlertsBellButton(),
         ],
       ),
       floatingActionButton: pets.isEmpty
