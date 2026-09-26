@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/state_views.dart';
+import '../../../home/presentation/widgets/alerts_bell.dart';
 import '../providers/pet_providers.dart';
 import '../widgets/pet_card.dart';
 
@@ -17,7 +19,7 @@ class PetsScreen extends ConsumerWidget {
     final hasPets = pets.value?.isNotEmpty ?? false;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Pets')),
+      appBar: const BrandAppBar(title: 'My Pets', actions: [AlertsBellButton()]),
       floatingActionButton: hasPets
           ? FloatingActionButton.extended(
               onPressed: () => context.push(AppRoutes.petNew),
@@ -48,7 +50,7 @@ class PetsScreen extends ConsumerWidget {
           return ListView.separated(
             padding: const EdgeInsets.fromLTRB(
               AppConstants.pagePadding,
-              8,
+              20,
               AppConstants.pagePadding,
               96, // clear the FAB
             ),
