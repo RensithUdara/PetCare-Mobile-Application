@@ -18,8 +18,9 @@ Until `flutterfire configure` runs, the app shows a "Firebase is not configured"
 ### Firebase console setup
 
 1. **Authentication → Sign-in method:** enable *Email/Password* and *Google*.
-2. **Firestore Database:** create a database, then deploy the rules in `firestore.rules`
-   (`firebase init firestore` → keep the existing file → `firebase deploy --only firestore:rules`).
+2. **Firestore Database & Storage:** create both, then deploy the rules in `firestore.rules` and
+   `storage.rules` (`firebase init firestore storage` → keep the existing files →
+   `firebase deploy --only firestore:rules,storage`).
 3. **Google Sign-In on Android:** add your debug SHA-1 to the Android app in Project settings
    (`cd android && ./gradlew signingReport`), then re-run `flutterfire configure`.
 4. **Google Sign-In on iOS:** add the `REVERSED_CLIENT_ID` from `ios/Runner/GoogleService-Info.plist`
@@ -28,7 +29,16 @@ Until `flutterfire configure` runs, the app shows a "Firebase is not configured"
 ### Data model
 
 Registration creates `users/{uid}` with `fullName`, `email`, `phone`, `photoUrl`, `createdAt`.
-All pet data will live in sub-collections under that document.
+Pets live at `users/{uid}/pets/{petId}`; their photos at `users/{uid}/pets/{petId}/photo_<ms>.jpg`
+in Storage (downscaled to 1080px, JPEG quality 80 before upload).
+
+## Code generation
+
+Models use Freezed + json_serializable. After changing a model:
+
+```bash
+flutter pub run build_runner build --delete-conflicting-outputs
+```
 
 ## Structure
 
@@ -51,7 +61,7 @@ lib/
 
 - [x] Phase 1 — project setup, architecture, theming (light/dark/system), routing, onboarding
 - [x] Phase 2 — authentication (email/password, Google, forgot password, logout)
-- [ ] Phase 3 — pet management
+- [x] Phase 3 — pet management (CRUD, photos, multiple pets)
 - [ ] Phase 4 — vaccinations
 - [ ] Phase 5+ — appointments, medications, dashboard, notifications, …
 
