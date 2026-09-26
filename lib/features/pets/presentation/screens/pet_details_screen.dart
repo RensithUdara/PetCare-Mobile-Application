@@ -8,6 +8,7 @@ import '../../../../core/widgets/state_views.dart';
 import '../../domain/entities/pet.dart';
 import '../../domain/logic/pet_age.dart';
 import '../../../appointments/presentation/widgets/pet_appointments_tile.dart';
+import '../../../documents/presentation/widgets/document_widgets.dart';
 import '../../../medications/presentation/widgets/medication_widgets.dart';
 import '../../../vaccinations/presentation/widgets/pet_vaccinations_tile.dart';
 import '../controllers/pet_editor_controller.dart';
@@ -202,7 +203,7 @@ class _PetDetails extends ConsumerWidget {
                 const Divider(height: 1),
                 PetMedicationsTile(petId: pet.id),
                 const Divider(height: 1),
-                const _RecordTile(icon: Icons.description_outlined, title: 'Documents'),
+                PetDocumentsTile(petId: pet.id),
               ],
             ),
           ),
@@ -286,24 +287,6 @@ class _Section extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Entry point to a pet's health records; wired up in later phases.
-class _RecordTile extends StatelessWidget {
-  const _RecordTile({required this.icon, required this.title});
-
-  final IconData icon;
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
-      subtitle: const Text('Coming soon'),
-      enabled: false,
     );
   }
 }
