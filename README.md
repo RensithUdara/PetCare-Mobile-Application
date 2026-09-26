@@ -34,7 +34,12 @@ in Storage (downscaled to 1080px, JPEG quality 80 before upload).
 
 Vaccinations live at `users/{uid}/vaccinations/{id}` with a `petId` field (so dashboard and calendar
 can query across pets). Each record stores `reminderDaysBefore` plus a denormalized `reminderAt`
-timestamp for the upcoming Cloud Functions reminder job. Deleting a pet deletes its vaccinations.
+timestamp for the upcoming Cloud Functions reminder job.
+
+Appointments live at `users/{uid}/appointments/{id}` (also keyed by `petId`) with `dateTime`,
+`type`, `status` (`scheduled` / `completed` / `cancelled`) and the same `reminderAt` field
+(cleared once an appointment is no longer scheduled). Deleting a pet deletes its vaccinations
+and appointments.
 
 ## Code generation
 
@@ -94,6 +99,15 @@ lib/
 - Presentation talks to the domain **only through use cases**, never repositories directly.
 - Repositories throw `Failure` (user-presentable message); SDK exceptions never leave `data`.
 - Time-dependent logic takes a clock (`clockProvider`) so it is testable.
+- Features that aggregate others (e.g. **calendar**) depend on their *domain* repositories and
+  logic, combining streams with the pure `combineLatest` helper.
+
+### Navigation
+
+- Tabs (`/home`, `/pets`, `/calendar`, …) keep their own stacks; details pages live inside the
+  tab that opened them (`/pets/:petId/appointments/:id`, `/calendar/appointment/:id`).
+- All forms are full-screen top-level routes under `/edit/...` so any tab can open them.
+- `test/core/app_router_test.dart` checks that every `AppRoutes` path resolves.
 
 ## Progress
 
@@ -101,7 +115,8 @@ lib/
 - [x] Phase 2 — authentication (email/password, Google, forgot password, logout)
 - [x] Phase 3 — pet management (CRUD, photos, multiple pets)
 - [x] Phase 4 — vaccinations (records, status, reminders config, history timeline)
-- [ ] Phase 5+ — appointments, medications, dashboard, notifications, …
+- [x] Phase 5 — appointments (schedule, complete, cancel, history) and calendar
+- [ ] Phase 6+ — medications, dashboard, notifications, …
 
 ## Tests
 
