@@ -46,3 +46,4 @@ app.*.map.json
 
 # Web portal build output (built on deploy)
 /public/app/
+/web/dist/
