@@ -101,6 +101,21 @@ void main() {
     expect(find.text('DHPP vaccination given'), findsNothing);
   });
 
+  testWidgets('bell shows the alert count and opens the alerts sheet', (tester) async {
+    await pump(tester, pets: const [
+      Pet(id: 'bruno', ownerId: 'u1', name: 'Bruno', species: PetSpecies.dog),
+    ]);
+
+    final bell = find.byTooltip('Health alerts');
+    expect(find.descendant(of: bell, matching: find.text('1')), findsOneWidget);
+
+    await tester.tap(bell);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Health alerts'), findsOneWidget);
+    expect(find.text('DHPP vaccination is overdue by 6 days'), findsNWidgets(2));
+  });
+
   testWidgets('tapping an alert opens the record inside the Home tab', (tester) async {
     await pump(tester, pets: const [
       Pet(id: 'bruno', ownerId: 'u1', name: 'Bruno', species: PetSpecies.dog),
