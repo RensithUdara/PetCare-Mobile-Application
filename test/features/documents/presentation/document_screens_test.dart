@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:petcare/core/errors/failure.dart';
 import 'package:petcare/core/utils/clock.dart';
 import 'package:petcare/features/authentication/presentation/providers/auth_providers.dart';
 import 'package:petcare/features/documents/domain/entities/medical_document.dart';
@@ -13,6 +14,7 @@ import 'package:petcare/features/documents/presentation/services/document_picker
 import 'package:petcare/features/pets/domain/entities/pet.dart';
 import 'package:petcare/features/pets/presentation/providers/pet_providers.dart';
 
+import '../../../helpers/fake_document_file_repository.dart';
 import '../../../helpers/fake_document_repository.dart';
 import '../../../helpers/fake_pet_repository.dart';
 import '../../../helpers/pump_screen.dart';
@@ -34,6 +36,7 @@ class _FakePicker implements DocumentPicker {
 void main() {
   final now = DateTime(2026, 9, 26, 12);
   late _FakePicker picker;
+  late FakeDocumentFileRepository files;
 
   MedicalDocument doc(String id, String name, DocumentType type, {String ct = 'application/pdf'}) =>
       MedicalDocument(
@@ -52,6 +55,7 @@ void main() {
 
   Future<void> pump(WidgetTester tester, FakeDocumentRepository repo, Widget screen) {
     picker = _FakePicker();
+    files = FakeDocumentFileRepository();
     return pumpScreen(tester, screen, physicalSize: const Size(1080, 4000), overrides: [
       currentUserIdProvider.overrideWithValue('u1'),
       clockProvider.overrideWithValue(() => now),
@@ -60,6 +64,9 @@ void main() {
       ])),
       documentRepositoryProvider.overrideWithValue(repo),
       documentPickerProvider.overrideWithValue(picker),
+      documentFileRepositoryProvider.overrideWithValue(files),
+      // pdfx renders natively; stand in with a marker in widget tests.
+      pdfViewBuilderProvider.overrideWithValue((bytes) => Text('PDF VIEW ${bytes.length} bytes')),
     ]);
   }
 
@@ -139,12 +146,14 @@ void main() {
     });
   });
 
-  testWidgets('viewer offers to open PDFs externally and can delete', (tester) async {
+  testWidgets('viewer renders PDFs in-app and can delete (evicting the cache)', (tester) async {
     final repo = FakeDocumentRepository([doc('a', 'Blood test', DocumentType.bloodTest)]);
     await pump(tester, repo, const DocumentViewerScreen(documentId: 'a'));
+    await tester.pumpAndSettle();
 
-    expect(find.text('Open PDF'), findsOneWidget);
+    expect(find.text('PDF VIEW ${files.bytes.length} bytes'), findsOneWidget);
     expect(find.textContaining('Blood test · Bruno'), findsOneWidget);
+    expect(find.byTooltip('Open in another app'), findsOneWidget);
 
     await tester.tap(find.byType(PopupMenuButton<String>));
     await tester.pumpAndSettle();
@@ -155,5 +164,23 @@ void main() {
 
     expect(repo.items, isEmpty);
     expect(repo.files, isEmpty);
+    expect(files.evicted, ['a']);
+  });
+
+  testWidgets('viewer explains when a PDF can’t be loaded offline', (tester) async {
+    final repo = FakeDocumentRepository([doc('a', 'Blood test', DocumentType.bloodTest)]);
+    await pump(tester, repo, const DocumentViewerScreen(documentId: 'a'));
+    files.failure = const Failure('This document hasn’t been downloaded to this device yet. '
+        'Connect to the internet to open it.', code: 'offline-not-cached');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Couldn’t open this PDF'), findsOneWidget);
+    expect(find.textContaining('hasn’t been downloaded'), findsOneWidget);
+    expect(find.text('Open in another app'), findsOneWidget);
+
+    files.failure = null;
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('PDF VIEW'), findsOneWidget);
   });
 }
