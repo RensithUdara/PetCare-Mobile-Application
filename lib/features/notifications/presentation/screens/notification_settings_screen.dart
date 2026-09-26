@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/modern_widgets.dart';
 import '../../domain/entities/reminder.dart';
 import '../../domain/logic/reminder_planner.dart';
 import '../controllers/reminder_sync_controller.dart';
@@ -14,6 +16,12 @@ class NotificationSettingsScreen extends ConsumerWidget {
     ReminderCategory.vaccination: 'Before a vaccination is due (timing set per record)',
     ReminderCategory.appointment: 'Before vet appointments (timing set per appointment)',
     ReminderCategory.medication: 'At each dose time for active medications',
+  };
+
+  static const _accents = {
+    ReminderCategory.vaccination: FeatureAccent.vaccinations,
+    ReminderCategory.appointment: FeatureAccent.appointments,
+    ReminderCategory.medication: FeatureAccent.medications,
   };
 
   static const _icons = {
@@ -49,7 +57,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
               children: [
                 for (final category in ReminderCategory.values)
                   SwitchListTile(
-                    secondary: Icon(_icons[category]),
+                    secondary: IconBadge(icon: _icons[category]!, accent: _accents[category]!, size: 40),
                     title: Text(category.label),
                     subtitle: Text(_descriptions[category]!),
                     value: settings.enabled && settings.allows(category),
