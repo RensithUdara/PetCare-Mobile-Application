@@ -594,7 +594,7 @@ export function WeightPanel({ ownerId, petId }: { ownerId: string; petId: string
             <XAxis dataKey="date" fontSize={12} tickLine={false} />
             <YAxis fontSize={12} tickLine={false} unit=" kg" domain={['auto', 'auto']} />
             <Tooltip formatter={(v) => [fmtWeight(Number(v)), 'Weight']} />
-            <Line type="monotone" dataKey="kg" stroke="#EC4899" strokeWidth={3} dot={{ r: 4, fill: '#EC4899' }} />
+            <Line isAnimationActive={false} type="monotone" dataKey="kg" stroke="#EC4899" strokeWidth={3} dot={{ r: 4, fill: '#EC4899' }} />
           </LineChart>
         </ResponsiveContainer>
       </div>
