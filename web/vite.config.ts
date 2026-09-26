@@ -9,6 +9,7 @@ export default defineConfig({
   build: {
     outDir: '../public/app',
     emptyOutDir: true,
+    chunkSizeWarningLimit: 800,
     rollupOptions: {
       output: {
         // Separate, long-cacheable vendor chunks.
