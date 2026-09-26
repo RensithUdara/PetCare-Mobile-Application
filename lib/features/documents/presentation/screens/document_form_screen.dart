@@ -3,11 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/clock.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_dialogs.dart';
 import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/date_field.dart';
+import '../../../../core/widgets/form_widgets.dart';
+import '../../../../core/widgets/modern_widgets.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../domain/entities/medical_document.dart';
 import '../controllers/document_editor_controller.dart';
@@ -149,6 +152,12 @@ class _DocumentFormState extends ConsumerState<_DocumentForm> {
     if (mounted) context.pop();
   }
 
+  static String _shortLabel(DocumentType t) => switch (t) {
+        DocumentType.vaccinationCertificate => 'Certificate',
+        DocumentType.medicalReport => 'Report',
+        _ => t.label,
+      };
+
   @override
   Widget build(BuildContext context) {
     ref.listen(documentEditorControllerProvider, (previous, next) {
@@ -159,97 +168,126 @@ class _DocumentFormState extends ConsumerState<_DocumentForm> {
     final editor = ref.watch(documentEditorControllerProvider);
     final theme = Theme.of(context);
     final now = ref.watch(clockProvider)();
-    const gap = SizedBox(height: 16);
+    const accent = FeatureAccent.documents;
 
     return Scaffold(
       appBar: BrandAppBar.page(title: _isEditing ? 'Edit Document' : 'Add Document'),
+      bottomNavigationBar: FormSaveBar(
+        label: _isEditing ? 'Save Changes' : 'Upload Document',
+        icon: _isEditing ? Icons.check_rounded : Icons.cloud_upload_outlined,
+        busy: editor.isBusy,
+        busyLabel: editor.uploadProgress == null
+            ? 'Saving…'
+            : 'Uploading ${(editor.uploadProgress! * 100).round()}%',
+        onPressed: _save,
+      ),
       body: AbsorbPointer(
         absorbing: editor.isBusy,
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
             children: [
-              if (_isEditing)
-                Card(
-                  child: ListTile(
-                    leading: DocumentThumbnail(document: widget.initial!, size: 44),
-                    title: Text(widget.initial!.fileName),
-                    subtitle: Text(formatBytes(widget.initial!.sizeBytes)),
-                  ),
-                )
-              else
-                _FilePickerCard(
-                  file: _file,
-                  showError: _fileMissing,
-                  onPick: _pick,
-                ),
-              gap,
-              TextFormField(
-                controller: _name,
-                textCapitalization: TextCapitalization.sentences,
-                textInputAction: TextInputAction.next,
-                validator: (v) => Validators.required(v, field: 'Document name'),
-                decoration: const InputDecoration(
-                  labelText: 'Document name *',
-                  prefixIcon: Icon(Icons.title),
-                ),
+              GradientHeader(
+                floating: true,
+                margin: const EdgeInsets.only(top: 16),
+                gradient: accent.gradient,
+                padding: const EdgeInsets.all(20),
+                child: _isEditing
+                    ? _FilePreview(
+                        name: widget.initial!.fileName,
+                        size: widget.initial!.sizeBytes,
+                        thumbnail: DocumentThumbnail(document: widget.initial!, size: 56),
+                      )
+                    : _UploadPanel(file: _file, onPick: _pick),
               ),
-              gap,
-              Text('Type', style: theme.textTheme.labelLarge),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
+              if (_fileMissing)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10, left: 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.error_outline, size: 18, color: theme.colorScheme.error),
+                      const SizedBox(width: 6),
+                      Text('Choose a file to upload',
+                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error)),
+                    ],
+                  ),
+                ),
+              if (editor.uploadProgress != null) ...[
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: editor.uploadProgress,
+                    minHeight: 6,
+                    color: accent.color,
+                    backgroundColor: accent.color.withValues(alpha: 0.15),
+                  ),
+                ),
+              ],
+              FormSection(
+                title: 'Details',
+                icon: Icons.description_outlined,
+                accent: accent,
                 children: [
-                  for (final t in DocumentType.values)
-                    ChoiceChip(
-                      avatar: Icon(t.icon, size: 18),
-                      label: Text(t.label),
-                      selected: _type == t,
-                      onSelected: (_) => setState(() => _type = t),
+                  TextFormField(
+                    controller: _name,
+                    textCapitalization: TextCapitalization.sentences,
+                    textInputAction: TextInputAction.next,
+                    validator: (v) => Validators.required(v, field: 'Document name'),
+                    decoration: const InputDecoration(
+                      labelText: 'Document name *',
+                      hintText: 'e.g. Annual blood panel',
+                      prefixIcon: Icon(Icons.title),
                     ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const FieldLabel('Type'),
+                      TileGrid(
+                        children: [
+                          for (final t in DocumentType.values)
+                            SelectTile(
+                              label: _shortLabel(t),
+                              icon: t.icon,
+                              accent: accent,
+                              selected: _type == t,
+                              onTap: () => setState(() => _type = t),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  DateField(
+                    label: 'Document date *',
+                    initialValue: _date,
+                    firstDate: DateTime(1990),
+                    lastDate: now,
+                    clearable: false,
+                    validator: (d) => d == null ? 'Date is required' : null,
+                    onChanged: (d) => setState(() => _date = d),
+                  ),
                 ],
               ),
-              gap,
-              DateField(
-                label: 'Document date *',
-                initialValue: _date,
-                firstDate: DateTime(1990),
-                lastDate: now,
-                clearable: false,
-                validator: (d) => d == null ? 'Date is required' : null,
-                onChanged: (d) => setState(() => _date = d),
-              ),
-              gap,
-              TextFormField(
-                controller: _description,
-                minLines: 2,
-                maxLines: 5,
-                maxLength: 500,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  alignLabelWithHint: true,
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (editor.uploadProgress != null) ...[
-                LinearProgressIndicator(value: editor.uploadProgress),
-                const SizedBox(height: 8),
-                Text('Uploading ${(editor.uploadProgress! * 100).round()}%',
-                    style: theme.textTheme.bodySmall),
-                const SizedBox(height: 8),
-              ],
-              FilledButton(
-                onPressed: editor.isBusy ? null : _save,
-                child: editor.isBusy
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2.5),
-                      )
-                    : Text(_isEditing ? 'Save Changes' : 'Upload Document'),
+              FormSection(
+                title: 'Description',
+                icon: Icons.sticky_note_2_outlined,
+                accent: FeatureAccent.calendar,
+                children: [
+                  TextFormField(
+                    controller: _description,
+                    minLines: 3,
+                    maxLines: 6,
+                    maxLength: 500,
+                    textCapitalization: TextCapitalization.sentences,
+                    decoration: const InputDecoration(
+                      labelText: 'Description',
+                      hintText: 'Results, what the vet said, follow-ups…',
+                      alignLabelWithHint: true,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -259,101 +297,142 @@ class _DocumentFormState extends ConsumerState<_DocumentForm> {
   }
 }
 
-class _FilePickerCard extends StatelessWidget {
-  const _FilePickerCard({required this.file, required this.showError, required this.onPick});
+/// Hero content for a new document: choose a file, or preview the chosen one.
+class _UploadPanel extends StatelessWidget {
+  const _UploadPanel({required this.file, required this.onPick});
 
   final DocumentFile? file;
-  final bool showError;
   final ValueChanged<DocumentSource> onPick;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final f = file;
-    return Card(
-      shape: showError
-          ? RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: theme.colorScheme.error),
-            )
-          : null,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (f != null) ...[
-              Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: f.contentType.startsWith('image/')
-                        ? Image.memory(f.bytes, width: 64, height: 64, fit: BoxFit.cover)
-                        : Container(
-                            width: 64,
-                            height: 64,
-                            color: theme.colorScheme.primaryContainer,
-                            alignment: Alignment.center,
-                            child: Text('PDF',
-                                style: TextStyle(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.w800,
-                                )),
-                          ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(f.fileName, maxLines: 1, overflow: TextOverflow.ellipsis),
-                        Text(formatBytes(f.sizeBytes), style: theme.textTheme.bodySmall),
-                      ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (f == null) ...[
+          Text('Upload a document',
+              style: theme.textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 4),
+          Text('A photo or PDF, up to 10 MB',
+              style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9))),
+        ] else
+          _FilePreview(
+            name: f.fileName,
+            size: f.sizeBytes,
+            thumbnail: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: f.contentType.startsWith('image/')
+                  ? Image.memory(f.bytes, width: 56, height: 56, fit: BoxFit.cover)
+                  : Container(
+                      width: 56,
+                      height: 56,
+                      color: Colors.white,
+                      alignment: Alignment.center,
+                      child: Text('PDF',
+                          style: TextStyle(color: FeatureAccent.documents.deep, fontWeight: FontWeight.w800)),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-            ] else ...[
-              Icon(Icons.upload_file, size: 40, color: theme.colorScheme.primary),
-              const SizedBox(height: 8),
-              Text('Choose a photo or PDF (max 10 MB)', textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium),
-              const SizedBox(height: 12),
+            ),
+          ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            for (final (i, (source, icon, label)) in const [
+              (DocumentSource.camera, Icons.photo_camera_outlined, 'Camera'),
+              (DocumentSource.gallery, Icons.photo_library_outlined, 'Gallery'),
+              (DocumentSource.pdf, Icons.picture_as_pdf_outlined, 'PDF'),
+            ].indexed) ...[
+              if (i > 0) const SizedBox(width: 10),
+              Expanded(child: _SourceTile(icon: icon, label: label, onTap: () => onPick(source))),
             ],
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 8,
-              runSpacing: 8,
+          ],
+        ),
+        if (f != null) ...[
+          const SizedBox(height: 8),
+          Text('Tap a source to choose a different file',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(color: Colors.white.withValues(alpha: 0.85))),
+        ],
+      ],
+    );
+  }
+}
+
+/// White card with the file's thumbnail, name and size.
+class _FilePreview extends StatelessWidget {
+  const _FilePreview({required this.name, required this.size, required this.thumbnail});
+
+  final String name;
+  final int size;
+  final Widget thumbnail;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          thumbnail,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
-                  onPressed: () => onPick(DocumentSource.camera),
-                  icon: const Icon(Icons.photo_camera_outlined),
-                  label: const Text('Camera'),
-                ),
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
-                  onPressed: () => onPick(DocumentSource.gallery),
-                  icon: const Icon(Icons.photo_library_outlined),
-                  label: const Text('Gallery'),
-                ),
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
-                  onPressed: () => onPick(DocumentSource.pdf),
-                  icon: const Icon(Icons.picture_as_pdf_outlined),
-                  label: const Text('PDF'),
-                ),
+                Text(name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
+                Text(formatBytes(size),
+                    style: theme.textTheme.bodySmall?.copyWith(color: Colors.white.withValues(alpha: 0.85))),
               ],
             ),
-            if (showError)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text('Choose a file to upload',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error)),
-              ),
-          ],
+          ),
+          const Icon(Icons.check_circle_rounded, color: Colors.white),
+        ],
+      ),
+    );
+  }
+}
+
+/// Big glass button for a file source.
+class _SourceTile extends StatelessWidget {
+  const _SourceTile({required this.icon, required this.label, required this.onTap});
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final shape = BorderRadius.circular(18);
+    return Material(
+      color: Colors.white,
+      borderRadius: shape,
+      elevation: 3,
+      shadowColor: Colors.black26,
+      child: InkWell(
+        borderRadius: shape,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          child: Column(
+            children: [
+              Icon(icon, size: 28, color: FeatureAccent.documents.deep),
+              const SizedBox(height: 6),
+              Text(label,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: FeatureAccent.documents.deep,
+                        fontWeight: FontWeight.w800,
+                      )),
+            ],
+          ),
         ),
       ),
     );
