@@ -132,3 +132,6 @@ export const sendDueReminders = onSchedule(
     logger.info(`sendDueReminders: ${sent} push notification(s) sent`);
   },
 );
+
+// Admin / doctor role management for the web portals.
+export {adminStats, bootstrapAdmin, listUsers, reviewDoctor, setUserDisabled, setUserRole} from "./admin";
