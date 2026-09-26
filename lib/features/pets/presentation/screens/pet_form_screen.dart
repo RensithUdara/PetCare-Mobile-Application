@@ -159,6 +159,7 @@ class _PetFormState extends ConsumerState<_PetForm> {
             children: [
               GradientHeader(
                 floating: true,
+                margin: const EdgeInsets.only(top: 16),
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
                 child: Column(
                   children: [
