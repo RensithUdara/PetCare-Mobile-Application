@@ -4,6 +4,11 @@
          exact-alarm permission is needed. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- Finding nearby clinics / placing a clinic at the current location. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <!-- Map tiles and the Overpass API (release builds). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="petcare"
         android:name="${applicationName}"
@@ -25,6 +30,16 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- App Links: QR codes (https://<project>.web.app/p/<id>) open the app's
+                 emergency profile when installed. Verified via
+                 public/.well-known/assetlinks.json on Firebase Hosting. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="petcare-20260926.web.app" android:pathPrefix="/p/" />
+                <data android:scheme="https" android:host="petcare-20260926.firebaseapp.com" android:pathPrefix="/p/" />
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -65,6 +80,15 @@
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="https" />
+        </intent>
+        <!-- url_launcher: call and email clinics. -->
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="mailto" />
         </intent>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
