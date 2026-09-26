@@ -88,12 +88,17 @@ class GradientHeader extends StatelessWidget {
     this.gradient,
     this.padding = const EdgeInsets.fromLTRB(20, 16, 20, 28),
     this.bottomRadius = 32,
+    this.floating = false,
   });
 
   final Widget child;
   final Gradient? gradient;
   final EdgeInsetsGeometry padding;
   final double bottomRadius;
+
+  /// Rounded on all corners with a side margin — a hero card placed under
+  /// an app bar rather than a full-bleed banner.
+  final bool floating;
 
   @override
   Widget build(BuildContext context) {
@@ -102,9 +107,13 @@ class GradientHeader extends StatelessWidget {
     final firstColor = g is LinearGradient ? g.colors.first : AppColors.teal;
     return Container(
       width: double.infinity,
+      margin: floating ? const EdgeInsets.fromLTRB(16, 16, 16, 0) : null,
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         gradient: g,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(bottomRadius)),
+        borderRadius: floating
+            ? BorderRadius.circular(28)
+            : BorderRadius.vertical(bottom: Radius.circular(bottomRadius)),
         boxShadow: [
           BoxShadow(
             color: firstColor.withValues(alpha: 0.35),
