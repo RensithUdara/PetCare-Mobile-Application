@@ -32,6 +32,9 @@ import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/pets/presentation/screens/pet_details_screen.dart';
 import '../../features/pets/presentation/screens/pet_form_screen.dart';
 import '../../features/pets/presentation/screens/pets_screen.dart';
+import '../../features/profile/presentation/screens/change_password_screen.dart';
+import '../../features/profile/presentation/screens/edit_profile_screen.dart';
+import '../../features/profile/presentation/screens/faq_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
 import '../../features/vaccinations/presentation/screens/vaccination_details_screen.dart';
@@ -90,7 +93,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           _branch(_route(
             AppRoutes.profile,
             (_) => const ProfileScreen(),
-            routes: [_route('notifications', (_) => const NotificationSettingsScreen())],
+            routes: [
+              _route('notifications', (_) => const NotificationSettingsScreen()),
+              _route('faq', (_) => const FaqScreen()),
+            ],
           )),
         ],
       ),
@@ -179,6 +185,8 @@ final _calendarRoute = _route(
 
 /// Full-screen forms and viewers, reachable from any tab.
 final _formRoutes = [
+  _route(AppRoutes.profileEdit, (_) => const EditProfileScreen()),
+  _route(AppRoutes.changePassword, (_) => const ChangePasswordScreen()),
   _route(AppRoutes.petNew, (_) => const PetFormScreen()),
   _route('/edit/pet/:petId', (s) => PetFormScreen(petId: s.param('petId'))),
   _route('/edit/vaccination', (s) => VaccinationFormScreen(petId: s.query('petId'))),
