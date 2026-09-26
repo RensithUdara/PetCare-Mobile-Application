@@ -32,6 +32,10 @@ Registration creates `users/{uid}` with `fullName`, `email`, `phone`, `photoUrl`
 Pets live at `users/{uid}/pets/{petId}`; their photos at `users/{uid}/pets/{petId}/photo_<ms>.jpg`
 in Storage (downscaled to 1080px, JPEG quality 80 before upload).
 
+Vaccinations live at `users/{uid}/vaccinations/{id}` with a `petId` field (so dashboard and calendar
+can query across pets). Each record stores `reminderDaysBefore` plus a denormalized `reminderAt`
+timestamp for the upcoming Cloud Functions reminder job. Deleting a pet deletes its vaccinations.
+
 ## Code generation
 
 Models use Freezed + json_serializable. After changing a model:
@@ -40,29 +44,63 @@ Models use Freezed + json_serializable. After changing a model:
 flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
-## Structure
+## Architecture
+
+Clean Architecture, organised by feature. Dependencies point inwards only:
+
+```text
+presentation ──▶ domain ◀── data
+ (widgets,        (entities,    (models/DTOs,
+  controllers,     repository    data sources,
+  providers)       interfaces,   repository
+                   use cases)    implementations)
+```
 
 ```
 lib/
-├── app.dart                 # MaterialApp.router, themes
-├── main.dart                # Firebase + SharedPreferences bootstrap
-├── core/
-│   ├── constants/
-│   ├── errors/              # Failure type repositories throw
-│   ├── routing/             # GoRouter, redirect rules, bottom-nav shell
-│   ├── storage/             # SharedPreferences provider + keys
-│   ├── theme/               # AppTheme, AppColors, StatusColors, ThemeModeController
-│   ├── utils/
-│   └── widgets/             # StatusBadge, EmptyState, LoadingView, ErrorView
-└── features/<feature>/{data,domain,presentation}
+├── app.dart / main.dart
+├── core/                      # cross-cutting, feature-agnostic
+│   ├── domain/                # shared pure-Dart types (ReminderOffset)
+│   ├── errors/                # Failure + Firebase error mapping
+│   ├── routing/               # GoRouter, redirect rules, bottom-nav shell
+│   ├── storage/               # SharedPreferences, Firestore JSON helpers
+│   ├── theme/                 # AppTheme, StatusColors, ThemeModeController
+│   ├── utils/                 # validators, date utils, clock
+│   └── widgets/               # StatusBadge, EmptyState, DateField, …
+└── features/<feature>/
+    ├── domain/
+    │   ├── entities/          # Freezed, no JSON, no Flutter
+    │   ├── repositories/      # abstract interfaces
+    │   ├── usecases/          # one class per action, exposes call()
+    │   └── logic/             # pure business rules (e.g. vaccination status)
+    ├── data/
+    │   ├── models/            # json_serializable DTOs with toEntity()/fromEntity()
+    │   ├── datasources/       # raw Firebase calls; throw SDK exceptions
+    │   └── repositories/      # implement domain interfaces; map errors → Failure
+    └── presentation/
+        ├── providers/         # Riverpod DI wiring (data → use cases → state)
+        ├── controllers/       # Notifiers holding UI state; call use cases only
+        ├── screens/
+        └── widgets/
 ```
+
+**Rules** (enforced by `test/architecture_test.dart`):
+
+- `domain` is pure Dart: no Flutter, Firebase or Riverpod; from `core` it may only use
+  `core/domain`, `core/errors/failure.dart` and `core/utils/date_utils.dart`.
+- `data` never imports `presentation`.
+- A feature never imports another feature's `data` layer — go through its domain interfaces
+  (e.g. `VaccinationRepository` implements the pets domain's `PetRecordsCleaner`).
+- Presentation talks to the domain **only through use cases**, never repositories directly.
+- Repositories throw `Failure` (user-presentable message); SDK exceptions never leave `data`.
+- Time-dependent logic takes a clock (`clockProvider`) so it is testable.
 
 ## Progress
 
 - [x] Phase 1 — project setup, architecture, theming (light/dark/system), routing, onboarding
 - [x] Phase 2 — authentication (email/password, Google, forgot password, logout)
 - [x] Phase 3 — pet management (CRUD, photos, multiple pets)
-- [ ] Phase 4 — vaccinations
+- [x] Phase 4 — vaccinations (records, status, reminders config, history timeline)
 - [ ] Phase 5+ — appointments, medications, dashboard, notifications, …
 
 ## Tests
@@ -70,3 +108,6 @@ lib/
 ```bash
 flutter test
 ```
+
+`test/` mirrors `lib/` (`domain` → use case & logic tests, `data` → model mapping,
+`presentation` → controllers & widgets). Fakes for repositories live in `test/helpers/`.
