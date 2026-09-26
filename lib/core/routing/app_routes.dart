@@ -25,10 +25,13 @@ abstract final class AppRoutes {
   static String vaccinationDetails(String petId, String id) => '/pets/$petId/vaccinations/$id';
   static String appointments(String petId) => '/pets/$petId/appointments';
   static String appointmentDetails(String petId, String id) => '/pets/$petId/appointments/$id';
+  static String medications(String petId) => '/pets/$petId/medications';
+  static String medicationDetails(String petId, String id) => '/pets/$petId/medications/$id';
 
   // ── Calendar tab ───────────────────────────────────────────────────────
   static String calendarAppointment(String id) => '/calendar/appointment/$id';
   static String calendarVaccination(String id) => '/calendar/vaccination/$id';
+  static String calendarMedication(String id) => '/calendar/medication/$id';
 
   // ── Forms (full-screen) ────────────────────────────────────────────────
   static const petNew = '/edit/pet';
@@ -46,4 +49,7 @@ abstract final class AppRoutes {
   }
 
   static String appointmentEdit(String id) => '/edit/appointment/$id';
+
+  static String medicationNew(String petId) => '/edit/medication?petId=$petId';
+  static String medicationEdit(String id) => '/edit/medication/$id';
 }

@@ -13,6 +13,9 @@ import '../../features/authentication/presentation/screens/register_screen.dart'
 import '../../features/calendar/presentation/screens/calendar_screen.dart';
 import '../../features/clinics/presentation/screens/clinics_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/medications/presentation/screens/medication_details_screen.dart';
+import '../../features/medications/presentation/screens/medication_form_screen.dart';
+import '../../features/medications/presentation/screens/medications_screen.dart';
 import '../../features/onboarding/presentation/providers/onboarding_controller.dart';
 import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/pets/presentation/screens/pet_details_screen.dart';
@@ -88,8 +91,7 @@ extension on GoRouterState {
   String? query(String name) => uri.queryParameters[name];
 }
 
-/// `/pets`, `/pets/:petId`, `/pets/:petId/vaccinations/...`,
-/// `/pets/:petId/appointments/...`
+/// `/pets`, `/pets/:petId`, `/pets/:petId/{vaccinations,appointments,medications}/...`
 final _petsRoute = _route(
   AppRoutes.pets,
   (_) => const PetsScreen(),
@@ -112,18 +114,26 @@ final _petsRoute = _route(
             _route(':id', (s) => AppointmentDetailsScreen(appointmentId: s.param('id'))),
           ],
         ),
+        _route(
+          'medications',
+          (s) => MedicationsScreen(petId: s.param('petId')),
+          routes: [
+            _route(':id', (s) => MedicationDetailsScreen(medicationId: s.param('id'))),
+          ],
+        ),
       ],
     ),
   ],
 );
 
-/// `/calendar`, `/calendar/appointment/:id`, `/calendar/vaccination/:id`
+/// `/calendar`, `/calendar/{appointment,vaccination,medication}/:id`
 final _calendarRoute = _route(
   AppRoutes.calendar,
   (_) => const CalendarScreen(),
   routes: [
     _route('appointment/:id', (s) => AppointmentDetailsScreen(appointmentId: s.param('id'))),
     _route('vaccination/:id', (s) => VaccinationDetailsScreen(vaccinationId: s.param('id'))),
+    _route('medication/:id', (s) => MedicationDetailsScreen(medicationId: s.param('id'))),
   ],
 );
 
@@ -141,4 +151,6 @@ final _formRoutes = [
     ),
   ),
   _route('/edit/appointment/:id', (s) => AppointmentFormScreen(appointmentId: s.param('id'))),
+  _route('/edit/medication', (s) => MedicationFormScreen(petId: s.query('petId'))),
+  _route('/edit/medication/:id', (s) => MedicationFormScreen(medicationId: s.param('id'))),
 ];
