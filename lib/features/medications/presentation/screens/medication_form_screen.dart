@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/errors/failure.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/clock.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_dialogs.dart';
 import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/date_field.dart';
+import '../../../../core/widgets/form_widgets.dart';
+import '../../../../core/widgets/modern_widgets.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../core/widgets/suggestion_field.dart';
 import '../../../clinics/presentation/providers/clinic_providers.dart';
-import '../../../pets/presentation/widgets/pet_selector.dart';
+import '../../../pets/presentation/providers/pet_providers.dart';
+import '../../../pets/presentation/widgets/pet_choice_field.dart';
 import '../../domain/entities/dose_time.dart';
 import '../../domain/entities/medication.dart';
 import '../controllers/medication_editor_controller.dart';
@@ -151,6 +156,22 @@ class _MedicationFormState extends ConsumerState<_MedicationForm> {
     if (mounted) context.pop();
   }
 
+  static String _shortLabel(MedicationFrequency f) => switch (f) {
+        MedicationFrequency.threeTimesDaily => '3× daily',
+        MedicationFrequency.everyOtherDay => 'Every 2 days',
+        MedicationFrequency.weekly => 'Weekly',
+        _ => f.label,
+      };
+
+  static IconData _frequencyIcon(MedicationFrequency f) => switch (f) {
+        MedicationFrequency.onceDaily => Icons.looks_one_outlined,
+        MedicationFrequency.twiceDaily => Icons.looks_two_outlined,
+        MedicationFrequency.threeTimesDaily => Icons.looks_3_outlined,
+        MedicationFrequency.everyOtherDay => Icons.event_repeat_outlined,
+        MedicationFrequency.weekly => Icons.date_range_outlined,
+        MedicationFrequency.asNeeded => Icons.pan_tool_alt_outlined,
+      };
+
   @override
   Widget build(BuildContext context) {
     ref.listen(medicationEditorControllerProvider, (previous, next) {
@@ -164,184 +185,321 @@ class _MedicationFormState extends ConsumerState<_MedicationForm> {
     final busy = ref.watch(medicationEditorControllerProvider).isLoading;
     final theme = Theme.of(context);
     final now = ref.watch(clockProvider)();
-    const gap = SizedBox(height: 16);
+    final pets = ref.watch(petsProvider).value ?? const [];
+    final pet = pets.where((p) => p.id == _petId).firstOrNull;
+    final date = DateFormat.MMMd();
+    final white80 = Colors.white.withValues(alpha: 0.85);
+    const accent = FeatureAccent.medications;
+    final name = _name.text.trim();
+    final summary = [
+      if (_dosage.text.trim().isNotEmpty) _dosage.text.trim(),
+      _frequency.label,
+      if (pet != null) 'for ${pet.name}',
+    ].join(' · ');
+    final schedule = _frequency.isScheduled && _times.isNotEmpty
+        ? _times.map((t) => t.format(context)).join(' · ')
+        : _frequency.isScheduled
+            ? 'No dose times yet'
+            : 'Given when needed';
+    final duration = _start == null
+        ? 'Pick a start date'
+        : _ongoing || _end == null
+            ? 'From ${date.format(_start!)} · ongoing'
+            : '${date.format(_start!)} → ${date.format(_end!)}';
+
+    Widget heroLine(IconData icon, String text) => Padding(
+          padding: const EdgeInsets.only(top: 3),
+          child: Row(
+            children: [
+              Icon(icon, size: 16, color: white80),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(text,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(color: white80)),
+              ),
+            ],
+          ),
+        );
 
     return Scaffold(
       appBar: BrandAppBar.page(title: _isEditing ? 'Edit Medication' : 'Add Medication'),
+      bottomNavigationBar: FormSaveBar(
+        label: _isEditing ? 'Save Changes' : 'Add Medication',
+        icon: _isEditing ? Icons.check_rounded : Icons.medication_rounded,
+        busy: busy,
+        busyLabel: 'Saving…',
+        onPressed: _save,
+      ),
       body: AbsorbPointer(
         absorbing: busy,
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
             children: [
-              PetSelector(
-                value: _petId,
-                enabled: !_isEditing,
-                onChanged: (id) => setState(() => _petId = id),
-              ),
-              gap,
-              TextFormField(
-                controller: _name,
-                textCapitalization: TextCapitalization.words,
-                textInputAction: TextInputAction.next,
-                validator: (v) => Validators.required(v, field: 'Medicine name'),
-                decoration: const InputDecoration(
-                  labelText: 'Medicine name *',
-                  prefixIcon: Icon(Icons.medication_outlined),
-                ),
-              ),
-              gap,
-              TextFormField(
-                controller: _dosage,
-                textInputAction: TextInputAction.next,
-                validator: (v) => Validators.required(v, field: 'Dosage'),
-                decoration: const InputDecoration(
-                  labelText: 'Dosage *',
-                  hintText: 'e.g. 1 tablet, 5 ml',
-                  prefixIcon: Icon(Icons.scale_outlined),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: [
-                  for (final d in const ['1 tablet', '½ tablet', '1 capsule', '5 ml', '1 drop'])
-                    ActionChip(label: Text(d), onPressed: () => setState(() => _dosage.text = d)),
-                ],
-              ),
-              gap,
-              DropdownButtonFormField<MedicationFrequency>(
-                initialValue: _frequency,
-                onChanged: (f) => _setFrequency(f!),
-                decoration: const InputDecoration(
-                  labelText: 'Frequency',
-                  prefixIcon: Icon(Icons.repeat),
-                ),
-                items: [
-                  for (final f in MedicationFrequency.values)
-                    DropdownMenuItem(value: f, child: Text(f.label)),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Text('Duration', style: theme.textTheme.titleSmall),
-              const SizedBox(height: 12),
-              DateField(
-                label: 'Start date *',
-                initialValue: _start,
-                firstDate: DateTime(now.year - 5),
-                lastDate: DateTime(now.year + 2),
-                clearable: false,
-                validator: (d) => d == null ? 'Start date is required' : null,
-                onChanged: (d) => setState(() => _start = d),
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Ongoing (no end date)'),
-                value: _ongoing,
-                onChanged: (v) => setState(() => _ongoing = v),
-              ),
-              if (!_ongoing) ...[
-                DateField(
-                  key: ValueKey('end-$_endFieldVersion'),
-                  label: 'End date',
-                  initialValue: _end,
-                  firstDate: DateTime(now.year - 5),
-                  lastDate: DateTime(now.year + 5),
-                  validator: (d) {
-                    if (d == null) return 'Choose an end date or mark as ongoing';
-                    if (_start != null && dateOnly(d).isBefore(dateOnly(_start!))) {
-                      return 'Cannot be before the start date';
-                    }
-                    return null;
-                  },
-                  onChanged: (d) => setState(() => _end = d),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
+              // Live summary of the prescription.
+              GradientHeader(
+                floating: true,
+                margin: const EdgeInsets.only(top: 16),
+                gradient: accent.gradient,
+                padding: const EdgeInsets.all(20),
+                child: Row(
                   children: [
-                    for (final days in _durations)
-                      ActionChip(label: Text('$days days'), onPressed: () => _setDuration(days)),
-                  ],
-                ),
-              ],
-              if (_frequency.isScheduled) ...[
-                const SizedBox(height: 24),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text('Reminders', style: theme.textTheme.titleSmall),
-                  subtitle: const Text('Get notified when a dose is due'),
-                  value: _reminders,
-                  onChanged: (v) => setState(() => _reminders = v),
-                ),
-                Text('Dose times', style: theme.textTheme.labelLarge),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (var i = 0; i < _times.length; i++)
-                      InputChip(
-                        avatar: const Icon(Icons.schedule, size: 18),
-                        label: Text(_times[i].format(context)),
-                        onPressed: () => _editTime(index: i),
-                        onDeleted: () => setState(() => _times.removeAt(i)),
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
                       ),
-                    ActionChip(
-                      avatar: const Icon(Icons.add, size: 18),
-                      label: const Text('Add time'),
-                      onPressed: _editTime,
+                      child: const Icon(Icons.medication_rounded, color: Colors.white, size: 32),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name.isEmpty ? 'New medication' : name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleMedium
+                                ?.copyWith(color: Colors.white, fontWeight: FontWeight.w800),
+                          ),
+                          heroLine(Icons.medication_liquid_outlined, summary),
+                          heroLine(Icons.schedule_rounded, schedule),
+                          heroLine(Icons.date_range_rounded, duration),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-                if (_reminders && _times.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Text(
-                      'Add at least one time to receive reminders',
-                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
+              ),
+              FormSection(
+                title: 'Which pet?',
+                icon: Icons.pets,
+                accent: FeatureAccent.pets,
+                subtitle: _isEditing ? 'A medication can’t be moved to another pet.' : null,
+                children: [
+                  PetChoiceField(
+                    value: _petId,
+                    enabled: !_isEditing,
+                    onChanged: (id) => setState(() => _petId = id),
+                  ),
+                ],
+              ),
+              FormSection(
+                title: 'Medicine',
+                icon: Icons.medication_outlined,
+                accent: accent,
+                children: [
+                  TextFormField(
+                    controller: _name,
+                    textCapitalization: TextCapitalization.words,
+                    textInputAction: TextInputAction.next,
+                    onChanged: (_) => setState(() {}),
+                    validator: (v) => Validators.required(v, field: 'Medicine name'),
+                    decoration: const InputDecoration(
+                      labelText: 'Medicine name *',
+                      hintText: 'e.g. Amoxicillin',
+                      prefixIcon: Icon(Icons.medication_outlined),
                     ),
                   ),
-              ],
-              const SizedBox(height: 24),
-              TextFormField(
-                controller: _instructions,
-                minLines: 2,
-                maxLines: 4,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  labelText: 'Instructions',
-                  hintText: 'e.g. Give with food',
-                  alignLabelWithHint: true,
-                ),
+                  TextFormField(
+                    controller: _dosage,
+                    textInputAction: TextInputAction.next,
+                    onChanged: (_) => setState(() {}),
+                    validator: (v) => Validators.required(v, field: 'Dosage'),
+                    decoration: const InputDecoration(
+                      labelText: 'Dosage *',
+                      hintText: 'e.g. 1 tablet, 5 ml',
+                      prefixIcon: Icon(Icons.scale_outlined),
+                    ),
+                  ),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final d in const ['1 tablet', '½ tablet', '1 capsule', '5 ml', '1 drop'])
+                        ActionChip(
+                          label: Text(d),
+                          backgroundColor: _dosage.text.trim() == d ? accent.color.withValues(alpha: 0.18) : null,
+                          onPressed: () => setState(() => _dosage.text = d),
+                        ),
+                    ],
+                  ),
+                ],
               ),
-              gap,
-              SuggestionField(
-                controller: _vet,
-                suggestions: ref.watch(vetNameSuggestionsProvider),
-                label: 'Prescribed by',
-                icon: Icons.person_outline,
+              FormSection(
+                title: 'Schedule',
+                icon: Icons.schedule_rounded,
+                accent: FeatureAccent.appointments,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const FieldLabel('How often'),
+                      TileGrid(
+                        children: [
+                          for (final f in MedicationFrequency.values)
+                            SelectTile(
+                              label: _shortLabel(f),
+                              icon: _frequencyIcon(f),
+                              accent: FeatureAccent.appointments,
+                              selected: _frequency == f,
+                              onTap: () => _setFrequency(f),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  if (_frequency.isScheduled) ...[
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const FieldLabel('Dose times'),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (var i = 0; i < _times.length; i++)
+                              InputChip(
+                                avatar: Icon(Icons.alarm_rounded, size: 18, color: FeatureAccent.appointments.color),
+                                label: Text(_times[i].format(context)),
+                                onPressed: () => _editTime(index: i),
+                                onDeleted: () => setState(() => _times.removeAt(i)),
+                              ),
+                            ActionChip(
+                              avatar: const Icon(Icons.add, size: 18),
+                              label: const Text('Add time'),
+                              onPressed: _editTime,
+                            ),
+                          ],
+                        ),
+                        if (_reminders && _times.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              'Add at least one time to receive reminders',
+                              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
+                            ),
+                          ),
+                      ],
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: FeatureAccent.appointments.color.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: SwitchListTile(
+                        secondary: Icon(
+                          _reminders ? Icons.notifications_active_outlined : Icons.notifications_off_outlined,
+                          color: FeatureAccent.appointments.color,
+                        ),
+                        title: const Text('Dose reminders', style: TextStyle(fontWeight: FontWeight.w700)),
+                        subtitle: const Text('Get notified when a dose is due'),
+                        value: _reminders,
+                        onChanged: (v) => setState(() => _reminders = v),
+                      ),
+                    ),
+                  ],
+                ],
               ),
-              gap,
-              TextFormField(
-                controller: _notes,
-                minLines: 2,
-                maxLines: 5,
-                maxLength: 500,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(labelText: 'Notes', alignLabelWithHint: true),
+              FormSection(
+                title: 'Duration',
+                icon: Icons.date_range_outlined,
+                accent: FeatureAccent.calendar,
+                children: [
+                  DateField(
+                    label: 'Start date *',
+                    initialValue: _start,
+                    firstDate: DateTime(now.year - 5),
+                    lastDate: DateTime(now.year + 2),
+                    clearable: false,
+                    validator: (d) => d == null ? 'Start date is required' : null,
+                    onChanged: (d) => setState(() => _start = d),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: FeatureAccent.calendar.color.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: SwitchListTile(
+                      secondary: Icon(Icons.all_inclusive_rounded, color: FeatureAccent.calendar.color),
+                      title: const Text('Ongoing (no end date)', style: TextStyle(fontWeight: FontWeight.w700)),
+                      value: _ongoing,
+                      onChanged: (v) => setState(() => _ongoing = v),
+                    ),
+                  ),
+                  if (!_ongoing) ...[
+                    DateField(
+                      key: ValueKey('end-$_endFieldVersion'),
+                      label: 'End date',
+                      initialValue: _end,
+                      firstDate: DateTime(now.year - 5),
+                      lastDate: DateTime(now.year + 5),
+                      validator: (d) {
+                        if (d == null) return 'Choose an end date or mark as ongoing';
+                        if (_start != null && dateOnly(d).isBefore(dateOnly(_start!))) {
+                          return 'Cannot be before the start date';
+                        }
+                        return null;
+                      },
+                      onChanged: (d) => setState(() => _end = d),
+                    ),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final days in _durations)
+                          ActionChip(
+                            avatar: Icon(Icons.timelapse_rounded, size: 16, color: FeatureAccent.calendar.color),
+                            label: Text('$days days'),
+                            onPressed: () => _setDuration(days),
+                          ),
+                      ],
+                    ),
+                  ],
+                ],
               ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: busy ? null : _save,
-                child: busy
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2.5),
-                      )
-                    : Text(_isEditing ? 'Save Changes' : 'Add Medication'),
+              FormSection(
+                title: 'Details',
+                icon: Icons.sticky_note_2_outlined,
+                accent: FeatureAccent.documents,
+                children: [
+                  TextFormField(
+                    controller: _instructions,
+                    minLines: 2,
+                    maxLines: 4,
+                    textCapitalization: TextCapitalization.sentences,
+                    decoration: const InputDecoration(
+                      labelText: 'Instructions',
+                      hintText: 'e.g. Give with food',
+                      alignLabelWithHint: true,
+                    ),
+                  ),
+                  SuggestionField(
+                    controller: _vet,
+                    suggestions: ref.watch(vetNameSuggestionsProvider),
+                    label: 'Prescribed by',
+                    icon: Icons.person_outline,
+                  ),
+                  TextFormField(
+                    controller: _notes,
+                    minLines: 2,
+                    maxLines: 5,
+                    maxLength: 500,
+                    textCapitalization: TextCapitalization.sentences,
+                    decoration: const InputDecoration(
+                      labelText: 'Notes',
+                      hintText: 'Side effects to watch for, how your pet takes it…',
+                      alignLabelWithHint: true,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
