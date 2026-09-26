@@ -24,6 +24,9 @@ abstract final class AppRoutes {
   static const clinics = '/clinics';
   static const profile = '/profile';
   static const notificationSettings = '/profile/notifications';
+  static const faq = '/profile/faq';
+  static const profileEdit = '/edit/profile';
+  static const changePassword = '/edit/password';
 
   // ── Pets tab ───────────────────────────────────────────────────────────
   static String petDetails(String petId) => '/pets/$petId';
