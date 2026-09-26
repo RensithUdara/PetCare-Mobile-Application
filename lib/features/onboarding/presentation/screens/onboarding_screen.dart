@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../providers/onboarding_controller.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../providers/onboarding_controller.dart';
 
 class _OnboardingPage {
   const _OnboardingPage(this.icon, this.title, this.body, this.accent);
