@@ -26,11 +26,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   late DateTime _selectedDay = _focusedDay;
   CalendarFormat _format = CalendarFormat.month;
 
-  void _open(CalendarEvent e) => context.push(switch (e.kind) {
-        CalendarEventKind.appointment => AppRoutes.calendarAppointment(e.sourceId),
-        CalendarEventKind.vaccinationDue => AppRoutes.calendarVaccination(e.sourceId),
-        CalendarEventKind.medication => AppRoutes.calendarMedication(e.sourceId),
-      });
+  void _open(CalendarEvent e) => context.push(eventDetailsRoute(e, fromHome: false));
 
   @override
   Widget build(BuildContext context) {
