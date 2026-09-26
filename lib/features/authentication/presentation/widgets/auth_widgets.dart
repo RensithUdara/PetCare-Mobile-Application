@@ -50,7 +50,8 @@ class AuthScaffold extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Icon(Icons.pets, size: 40, color: theme.colorScheme.primary),
+                    padding: const EdgeInsets.all(8),
+                    child: Image.asset('assets/images/app_icon.png', semanticLabel: 'PetCare'),
                   ),
                   const SizedBox(height: 18),
                   Text(

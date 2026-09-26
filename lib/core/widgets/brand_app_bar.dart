@@ -107,7 +107,7 @@ class _BrandTitle extends StatelessWidget {
           child: Image.asset(
             'assets/images/app_icon.png',
             semanticLabel: AppConstants.appName,
-            errorBuilder: (_, _, _) => const Icon(Icons.pets, color: AppColors.teal),
+            errorBuilder: (_, _, _) => Image.asset('assets/images/app_logo_splash.png'),
           ),
         ),
         const SizedBox(width: 12),
