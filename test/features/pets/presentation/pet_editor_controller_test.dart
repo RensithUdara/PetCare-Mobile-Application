@@ -6,23 +6,30 @@ import 'package:petcare/core/errors/failure.dart';
 import 'package:petcare/features/appointments/presentation/providers/appointment_providers.dart';
 import 'package:petcare/features/authentication/presentation/providers/auth_providers.dart';
 import 'package:petcare/features/documents/presentation/providers/document_providers.dart';
+import 'package:petcare/features/emergency/domain/entities/emergency_profile.dart';
+import 'package:petcare/features/emergency/presentation/providers/emergency_providers.dart';
 import 'package:petcare/features/medications/presentation/providers/medication_providers.dart';
 import 'package:petcare/features/pets/domain/entities/pet.dart';
 import 'package:petcare/features/pets/domain/entities/photo_change.dart';
 import 'package:petcare/features/pets/presentation/controllers/pet_editor_controller.dart';
 import 'package:petcare/features/pets/presentation/providers/pet_providers.dart';
 import 'package:petcare/features/vaccinations/presentation/providers/vaccination_providers.dart';
+import 'package:petcare/features/weight/presentation/providers/weight_providers.dart';
 
 import '../../../helpers/fake_appointment_repository.dart';
 import '../../../helpers/fake_document_repository.dart';
+import '../../../helpers/fake_emergency_repository.dart';
 import '../../../helpers/fake_medication_repository.dart';
 import '../../../helpers/fake_pet_repository.dart';
 import '../../../helpers/fake_vaccination_repository.dart';
+import '../../../helpers/fake_weight_repository.dart';
 
 /// Business rules are covered by the use case tests; this checks the
 /// controller's UI state (busy / progress / error).
 void main() {
   late FakePetRepository repo;
+  late FakeWeightRepository weights;
+  late FakeEmergencyRepository emergency;
   late ProviderContainer container;
   final states = <PetEditorState>[];
 
@@ -35,6 +42,8 @@ void main() {
       appointmentRepositoryProvider.overrideWithValue(FakeAppointmentRepository()),
       medicationRepositoryProvider.overrideWithValue(FakeMedicationRepository()),
       documentRepositoryProvider.overrideWithValue(FakeDocumentRepository()),
+      weightRepositoryProvider.overrideWithValue(weights),
+      emergencyProfileRepositoryProvider.overrideWithValue(emergency),
       currentUserIdProvider.overrideWithValue(uid),
     ]);
     c.listen(petEditorControllerProvider, (_, next) => states.add(next));
@@ -44,6 +53,10 @@ void main() {
 
   setUp(() {
     repo = FakePetRepository([existing]);
+    weights = FakeWeightRepository();
+    emergency = FakeEmergencyRepository(settings: const [
+      EmergencyProfile(petId: 'p1', ownerId: 'u1', publicId: 'PC-8A72F9K', contactPhone: '0771234567'),
+    ]);
     states.clear();
     container = build();
   });
@@ -76,5 +89,31 @@ void main() {
   test('delete goes through the DeletePet use case', () async {
     expect(await controller().delete('p1'), isTrue);
     expect(repo.pets, isEmpty);
+  });
+
+  test('logWeight records a weigh-in when the pet form weight changes', () async {
+    await controller().save(existing.copyWith(weightKg: 12.5), logWeight: true);
+
+    expect(weights.items.single.weightKg, 12.5);
+    expect(weights.items.single.petId, 'p1');
+    expect(repo.pets.single.weightKg, 12.5);
+  });
+
+  test('no weigh-in is logged unless asked', () async {
+    await controller().save(existing.copyWith(weightKg: 12.5));
+    expect(weights.items, isEmpty);
+  });
+
+  test('saving a pet refreshes its public QR page', () async {
+    await controller().save(existing.copyWith(name: 'Bruno the Brave'));
+    expect(emergency.public['PC-8A72F9K']?.petName, 'Bruno the Brave');
+  });
+
+  test('deleting a pet removes its public QR page', () async {
+    emergency.public['PC-8A72F9K'] = const PublicPetProfile(
+      publicId: 'PC-8A72F9K', ownerId: 'u1', petName: 'Bruno', species: 'dog');
+    await controller().delete('p1');
+    expect(emergency.public, isEmpty);
+    expect(emergency.settingsFor('p1'), isNull);
   });
 }

@@ -47,6 +47,14 @@ void main() {
       }
     });
 
+    test('public QR pages are reachable in any state', () {
+      const page = '/p/PC-ABC2345';
+      expect(redirect(page, loading: true), isNull);
+      expect(redirect(page, onboarded: false), isNull);
+      expect(redirect(page), isNull, reason: 'signed out');
+      expect(redirect(page, loggedIn: true), isNull);
+    });
+
     test('leaves signed-in users on app routes', () {
       expect(redirect(AppRoutes.home, loggedIn: true), isNull);
       expect(redirect(AppRoutes.pets, loggedIn: true), isNull);

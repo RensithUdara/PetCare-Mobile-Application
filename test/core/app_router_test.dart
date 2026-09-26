@@ -54,6 +54,16 @@ void main() {
       AppRoutes.documentViewer('d1'),
       AppRoutes.documentNew(petId: 'p1', vaccinationId: 'v1', type: 'xRay', name: 'Chest X-ray'),
       AppRoutes.documentEdit('d1'),
+      AppRoutes.clinicsMap,
+      AppRoutes.clinicDetails('c1'),
+      AppRoutes.clinicNew,
+      AppRoutes.clinicEdit('c1'),
+      AppRoutes.vetNew(clinicId: 'c1'),
+      AppRoutes.vetNew(),
+      AppRoutes.vetEdit('v1'),
+      AppRoutes.weight('p1'),
+      AppRoutes.emergency('p1'),
+      AppRoutes.publicProfile('PC-ABC2345'),
     ];
 
     for (final path in paths) {
