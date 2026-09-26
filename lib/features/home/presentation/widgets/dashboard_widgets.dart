@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/date_utils.dart';
+import '../../../../core/widgets/modern_widgets.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../../calendar/domain/entities/calendar_event.dart';
 import '../../../pets/presentation/widgets/pet_avatar.dart';
@@ -45,6 +47,11 @@ extension HealthAlertPresentation on HealthAlert {
         HealthAlertKind.appointmentNeedsUpdate => Icons.event_busy_outlined,
       };
 
+  FeatureAccent get accent => switch (kind) {
+        HealthAlertKind.vaccinationOverdue => FeatureAccent.emergency,
+        HealthAlertKind.appointmentNeedsUpdate => FeatureAccent.documents,
+      };
+
   String message(DateTime now) => switch (kind) {
         HealthAlertKind.vaccinationOverdue =>
           '$title vaccination is overdue by ${daysBetween(date, now)} '
@@ -70,18 +77,20 @@ class AlertCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = alert.tone.colorOf(context);
     return Card(
-      color: color.withValues(alpha: 0.08),
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: color.withValues(alpha: 0.4)),
-      ),
-      child: ListTile(
+      shadowColor: color.withValues(alpha: 0.35),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(left: BorderSide(color: color, width: 5)),
+        ),
+        child: ListTile(
+        contentPadding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
         onTap: onTap,
-        leading: Icon(alert.icon, color: color),
+        leading: IconBadge(icon: alert.icon, accent: alert.accent, size: 42),
         title: Text(alert.petName, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(alert.message(now)),
         trailing: const Icon(Icons.chevron_right),
+        ),
       ),
     );
   }
@@ -121,7 +130,23 @@ class PetSummaryCard extends StatelessWidget {
                 Badge(
                   isLabelVisible: summary.alertCount > 0,
                   label: Text('${summary.alertCount}'),
-                  child: PetAvatar.fromPet(summary.pet, radius: 30),
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: summary.alertCount > 0
+                          ? FeatureAccent.emergency.gradient
+                          : AppColors.brandGradient,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: theme.cardTheme.color ?? theme.colorScheme.surface,
+                      ),
+                      child: PetAvatar.fromPet(summary.pet, radius: 30),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -166,10 +191,15 @@ class AddPetCard extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: scheme.primaryContainer,
-                child: Icon(Icons.add, color: scheme.primary),
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: scheme.primary.withValues(alpha: 0.1),
+                  border: Border.all(color: scheme.primary.withValues(alpha: 0.4), width: 2),
+                ),
+                child: Icon(Icons.add, color: scheme.primary, size: 30),
               ),
               const SizedBox(height: 8),
               const Text('Add pet'),
@@ -186,6 +216,12 @@ extension ActivityPresentation on ActivityItem {
         ActivityKind.vaccinationGiven => Icons.vaccines_outlined,
         ActivityKind.appointmentCompleted => Icons.check_circle_outline,
         ActivityKind.medicationStarted => Icons.medication_outlined,
+      };
+
+  FeatureAccent get accent => switch (kind) {
+        ActivityKind.vaccinationGiven => FeatureAccent.vaccinations,
+        ActivityKind.appointmentCompleted => FeatureAccent.appointments,
+        ActivityKind.medicationStarted => FeatureAccent.medications,
       };
 
   String get description => switch (kind) {
@@ -212,7 +248,7 @@ class ActivityTile extends StatelessWidget {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       onTap: onTap,
-      leading: Icon(item.icon, color: Theme.of(context).colorScheme.primary),
+      leading: IconBadge(icon: item.icon, accent: item.accent, size: 38),
       title: Text(item.description),
       subtitle: Text('${item.petName} · ${DateFormat.MMMd().format(item.date)}'),
     );
