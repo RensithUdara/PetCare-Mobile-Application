@@ -1,35 +1,79 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import type { ReactNode } from 'react';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 
-function App() {
-  const [count, setCount] = useState(0)
+import { DialogProvider } from './components/dialogs';
+import { PortalLayout } from './components/PortalLayout';
+import { Spinner } from './components/ui';
+import { AuthProvider, homePathFor, useAuth } from './hooks/useAuth';
+import type { Role } from './lib/types';
+import { AdminDashboard, AdminDoctors, AdminSetup, AdminUsers } from './pages/admin/AdminPages';
+import { ForgotPasswordPage, LoginPage, RegisterPage } from './pages/auth/AuthPages';
+import { DoctorDashboard, DoctorPatientDetail, DoctorPatients, DoctorPending, DoctorProfilePage } from './pages/doctor/DoctorPages';
+import { OwnerDashboard, OwnerPetDetail, OwnerPets, OwnerProfile } from './pages/owner/OwnerPages';
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+/** Signed-in users only; with [role], only that role (others go home). */
+export function RequireAuth({ role, children }: { role?: Exclude<Role, 'owner'>; children: ReactNode }) {
+  const { user, role: myRole, doctor, loading } = useAuth();
+  if (loading) return <Spinner label="Loading your account…" />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (role && myRole !== role) return <Navigate to={homePathFor(myRole, doctor)} replace />;
+  return <>{children}</>;
 }
 
-export default App
+function Home() {
+  const { user, role, doctor, loading } = useAuth();
+  if (loading) return <Spinner label="Loading your account…" />;
+  return <Navigate to={user ? homePathFor(role, doctor) : '/login'} replace />;
+}
+
+const router = createBrowserRouter(
+  [
+    { path: '/', element: <Home /> },
+    { path: '/login', element: <LoginPage /> },
+    { path: '/register', element: <RegisterPage /> },
+    { path: '/forgot', element: <ForgotPasswordPage /> },
+    { path: '/setup-admin', element: <RequireAuth><AdminSetup /></RequireAuth> },
+    { path: '/doctor/pending', element: <RequireAuth><DoctorPending /></RequireAuth> },
+    {
+      path: '/owner',
+      element: <RequireAuth><PortalLayout portal="owner" /></RequireAuth>,
+      children: [
+        { index: true, element: <OwnerDashboard /> },
+        { path: 'pets', element: <OwnerPets /> },
+        { path: 'pets/:petId', element: <OwnerPetDetail /> },
+        { path: 'profile', element: <OwnerProfile /> },
+      ],
+    },
+    {
+      path: '/doctor',
+      element: <RequireAuth role="doctor"><PortalLayout portal="doctor" /></RequireAuth>,
+      children: [
+        { index: true, element: <DoctorDashboard /> },
+        { path: 'patients', element: <DoctorPatients /> },
+        { path: 'patients/:shareId', element: <DoctorPatientDetail /> },
+        { path: 'profile', element: <DoctorProfilePage /> },
+      ],
+    },
+    {
+      path: '/admin',
+      element: <RequireAuth role="admin"><PortalLayout portal="admin" /></RequireAuth>,
+      children: [
+        { index: true, element: <AdminDashboard /> },
+        { path: 'doctors', element: <AdminDoctors /> },
+        { path: 'users', element: <AdminUsers /> },
+      ],
+    },
+    { path: '*', element: <Navigate to="/" replace /> },
+  ],
+  { basename: import.meta.env.BASE_URL.replace(/\/$/, '') },
+);
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <DialogProvider>
+        <RouterProvider router={router} />
+      </DialogProvider>
+    </AuthProvider>
+  );
+}
