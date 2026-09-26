@@ -51,7 +51,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Share Bruno with Dr. Nimali Perera?'), findsOneWidget);
     await tester.tap(find.widgetWithText(FilledButton, 'Share'));
-    await tester.pump(const Duration(milliseconds: 500));
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    debugPrint('TEXTS: ${find.byType(Text).evaluate().map((e) => (e.widget as Text).data).where((t) => t != null).join(' | ')}');
 
     expect(find.text('Access granted'), findsOneWidget);
     await tester.pumpAndSettle();
