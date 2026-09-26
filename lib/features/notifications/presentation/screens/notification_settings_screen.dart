@@ -119,37 +119,39 @@ class _TestNotificationCardState extends ConsumerState<_TestNotificationCard> {
 
   Future<void> _send() async {
     setState(() => _busy = true);
+    bool granted;
     try {
-      final granted = await ref.read(requestNotificationPermissionProvider)();
-      if (!mounted) return;
-      if (!granted) {
-        await showConfirmDialog(
-          context,
-          title: 'Notifications are blocked',
-          message: 'Allow notifications for PetCare in your phone’s Settings → Apps → PetCare → '
-              'Notifications, then try again.',
-          confirmLabel: 'OK',
-          cancelLabel: 'Close',
-          icon: Icons.notifications_off_outlined,
-          accent: FeatureAccent.emergency,
+      granted = await ref.read(requestNotificationPermissionProvider)();
+      if (granted) await ref.read(showTestNotificationProvider)();
+    } catch (_) {
+      if (mounted) {
+        setState(() => _busy = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not send a test notification.')),
         );
-        return;
       }
-      await ref.read(showTestNotificationProvider)();
-      if (!mounted) return;
+      return;
+    }
+    if (!mounted) return;
+    // Stop the spinner before showing the result.
+    setState(() => _busy = false);
+    if (granted) {
       await showSuccessDialog(
         context,
         title: 'Test notification sent',
         message: 'Check your notification shade — it should appear in a few seconds.',
       );
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not send a test notification.')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _busy = false);
+    } else {
+      await showConfirmDialog(
+        context,
+        title: 'Notifications are blocked',
+        message: 'Allow notifications for PetCare in your phone’s Settings → Apps → PetCare → '
+            'Notifications, then try again.',
+        confirmLabel: 'OK',
+        cancelLabel: 'Close',
+        icon: Icons.notifications_off_outlined,
+        accent: FeatureAccent.emergency,
+      );
     }
   }
 
