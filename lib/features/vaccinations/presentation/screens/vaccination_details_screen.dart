@@ -7,6 +7,7 @@ import '../../../../core/errors/failure.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/utils/clock.dart';
 import '../../../../core/widgets/state_views.dart';
+import '../../../documents/presentation/widgets/document_widgets.dart';
 import '../../domain/entities/vaccination.dart';
 import '../../domain/entities/vaccination_overview.dart';
 import '../controllers/vaccination_editor_controller.dart';
@@ -181,6 +182,12 @@ class _Details extends ConsumerWidget {
                     ),
               ],
             ),
+          ),
+          const SizedBox(height: 16),
+          VaccinationCertificatesCard(
+            petId: vaccination.petId,
+            vaccinationId: vaccination.id,
+            vaccineName: vaccination.vaccineName,
           ),
           if (vaccination.notes != null) ...[
             const SizedBox(height: 16),
