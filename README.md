@@ -64,6 +64,21 @@ PetCare/
 
 ---
 
+## 📚 Project Documents
+
+| Document | Purpose |
+| --- | --- |
+| [Play Store Release Guide](docs/PLAY_STORE_RELEASE.md) | Full Google Play publishing checklist and store listing draft |
+| [Privacy Policy Draft](docs/PRIVACY_POLICY.md) | Draft privacy policy to review before publishing |
+| [Testing Checklist](docs/TESTING_CHECKLIST.md) | Manual and automated testing checklist |
+| [Firebase Setup](docs/FIREBASE_SETUP.md) | Firebase services, emulators, deployment, and production setup |
+| [Release Checklist](docs/RELEASE_CHECKLIST.md) | Repeatable checklist for each app release |
+| [Security](docs/SECURITY.md) | Security notes, sensitive data, and reporting guidance |
+| [Contributing](docs/CONTRIBUTING.md) | Development workflow and PR checklist |
+| [Changelog](docs/CHANGELOG.md) | Version history and release notes |
+
+---
+
 ## 🏗️ Architecture
 
 PetCare follows a **feature-first clean architecture** style:
