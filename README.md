@@ -74,6 +74,19 @@ its vets but unlinks them.
 - **Directions** open Google Maps / Apple Maps via a URL (no key).
 - Saved clinic and vet names autocomplete in appointment, vaccination and medication forms.
 
+## Design system
+
+- **`core/theme/app_theme.dart`** defines the whole look: soft tinted shadows on every `Card`, 20 px
+  radii, borderless filled inputs, raised buttons, floating navigation bar, heavier headings, styled
+  chips/segments/tabs/dialogs/sheets/snackbars — in both light and dark mode. Component text styles are
+  derived from the theme's `textTheme` so typography stays consistent.
+- **`FeatureAccent`** (`core/theme/app_colors.dart`) gives every feature one colour + gradient:
+  pets teal, vaccinations green, appointments blue, medications purple, documents orange, weight pink,
+  emergency red, clinics cyan, calendar indigo.
+- **`core/widgets/modern_widgets.dart`**: `GradientHeader` (hero banner), `IconBadge` (gradient
+  feature icon), `SoftCard` (shadowed box, optional gradient), `SectionTitle`, `HeaderStat`.
+  Prefer these over ad-hoc styling so new screens match automatically.
+
 ## Reminders & notifications
 
 - **Local notifications (primary).** `features/notifications/domain/logic/reminder_planner.dart`
