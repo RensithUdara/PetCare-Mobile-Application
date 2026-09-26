@@ -70,6 +70,31 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> signOut() => _guard(_remote.signOut);
 
+  @override
+  bool get usesPassword => _remote.providerIds.contains('password');
+
+  @override
+  Future<void> reauthenticate({String? password}) => _guard(() async {
+        if (usesPassword) {
+          if (password == null || password.isEmpty) {
+            throw const Failure('Enter your password to continue.', code: 'missing-password');
+          }
+          await _remote.reauthenticateWithPassword(password);
+        } else if (!await _remote.reauthenticateWithGoogle()) {
+          throw const Failure('Confirmation cancelled.', code: 'cancelled');
+        }
+      });
+
+  @override
+  Future<void> changePassword({required String currentPassword, required String newPassword}) =>
+      _guard(() async {
+        await _remote.reauthenticateWithPassword(currentPassword);
+        await _remote.updatePassword(newPassword);
+      });
+
+  @override
+  Future<void> deleteCurrentUser() => _guard(_remote.deleteCurrentUser);
+
   /// Translates SDK exceptions into domain [Failure]s.
   static Future<T> _guard<T>(Future<T> Function() action) async {
     try {
