@@ -56,7 +56,11 @@ class SharingController extends Notifier<SharingState> {
     final ok = await _run(() async {
       final uid = ref.read(currentUserIdProvider);
       if (uid == null) throw const Failure('You are signed out. Please sign in again.');
-      final owner = ref.read(userProfileProvider).value;
+      // Shown to the vet; wait briefly in case the profile hasn't loaded yet.
+      final owner = await ref
+          .read(userProfileProvider.future)
+          .timeout(const Duration(seconds: 3), onTimeout: () => null)
+          .catchError((_) => null);
       await ref.read(sharePetWithDoctorProvider)(PetShare(
         ownerId: uid,
         petId: pet.id,
