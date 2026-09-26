@@ -19,7 +19,7 @@ void main() {
     await tester.runAsync(() async {
       await tester.pumpWidget(MaterialApp(theme: AppTheme.light.copyWith(textTheme: AppTheme.light.textTheme.apply(fontFamily: 'Roboto')), home: const SplashScreen()));
       final ctx = tester.element(find.byType(Image));
-      await precacheImage(const AssetImage('assets/images/app_logo.png'), ctx);
+      await precacheImage(const AssetImage('assets/images/app_logo_splash.png'), ctx);
     });
     await tester.pump(const Duration(milliseconds: 1500));
     await expectLater(find.byType(SplashScreen), matchesGoldenFile('splash.png'));

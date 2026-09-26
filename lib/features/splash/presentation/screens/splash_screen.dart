@@ -80,7 +80,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                 return Transform.scale(scale: 1 + 0.03 * blobs.value * (1 - t), child: child);
               },
               child: Image.asset(
-                'assets/images/app_logo.png',
+                'assets/images/app_logo_splash.png',
                 width: SplashScreen.logoSize,
                 height: SplashScreen.logoSize,
                 semanticLabel: 'PetCare',
