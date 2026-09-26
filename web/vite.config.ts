@@ -6,7 +6,20 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   base: '/app/',
   plugins: [react()],
-  build: { outDir: '../public/app', emptyOutDir: true },
+  build: {
+    outDir: '../public/app',
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        // Separate, long-cacheable vendor chunks.
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/functions'],
+          charts: ['recharts'],
+        },
+      },
+    },
+  },
   test: {
     include: ['tests/unit/**/*.test.{ts,tsx}'],
     environment: 'jsdom',
