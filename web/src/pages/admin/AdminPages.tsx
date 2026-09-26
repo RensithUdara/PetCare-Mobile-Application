@@ -110,7 +110,7 @@ export function AdminDashboard() {
                     <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
                     <Tooltip cursor={{ fill: '#f1f5f9' }} />
-                    <Bar dataKey="value" radius={[10, 10, 0, 0]}>{records.map((r) => <Cell key={r.name} fill={r.fill} />)}</Bar>
+                    <Bar dataKey="value" radius={[10, 10, 0, 0]} isAnimationActive={false}>{records.map((r) => <Cell key={r.name} fill={r.fill} />)}</Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -120,7 +120,7 @@ export function AdminDashboard() {
               <div className="h-48">
                 <ResponsiveContainer>
                   <PieChart>
-                    <Pie data={doctors} dataKey="value" nameKey="name" innerRadius={45} outerRadius={75} paddingAngle={3}>
+                    <Pie data={doctors} dataKey="value" nameKey="name" innerRadius={45} outerRadius={75} paddingAngle={3} isAnimationActive={false}>
                       {doctors.map((d) => <Cell key={d.name} fill={d.fill} />)}
                     </Pie>
                     <Tooltip />
