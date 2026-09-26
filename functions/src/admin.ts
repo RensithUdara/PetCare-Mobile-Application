@@ -110,7 +110,11 @@ export const reviewDoctor = onCall(async (request) => {
     reviewedAt: FieldValue.serverTimestamp(),
   });
   const user = await getAuth().getUser(uid);
-  if (roleOf(user.customClaims) === "doctor") await setRoleClaim(uid, "owner");
+  if (roleOf(user.customClaims) === "doctor") {
+    await setRoleClaim(uid, "owner");
+    // End their sessions so the doctor role goes away on the next token refresh.
+    await getAuth().revokeRefreshTokens(uid);
+  }
   return {status: "rejected"};
 });
 
