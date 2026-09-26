@@ -91,6 +91,7 @@ class GradientHeader extends StatelessWidget {
     this.padding = const EdgeInsets.fromLTRB(20, 16, 20, 28),
     this.bottomRadius = 32,
     this.floating = false,
+    this.margin,
   });
 
   final Widget child;
@@ -102,6 +103,10 @@ class GradientHeader extends StatelessWidget {
   /// an app bar rather than a full-bleed banner.
   final bool floating;
 
+  /// Overrides the floating card's default 16px side/top margin — e.g.
+  /// `EdgeInsets.only(top: 16)` inside a list that is already padded.
+  final EdgeInsetsGeometry? margin;
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -109,7 +114,7 @@ class GradientHeader extends StatelessWidget {
     final firstColor = g is LinearGradient ? g.colors.first : AppColors.teal;
     return Container(
       width: double.infinity,
-      margin: floating ? const EdgeInsets.fromLTRB(16, 16, 16, 0) : null,
+      margin: margin ?? (floating ? const EdgeInsets.fromLTRB(16, 16, 16, 0) : null),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         gradient: g,
