@@ -8,12 +8,14 @@ import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/clock.dart';
 import '../../../../core/utils/greeting.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/modern_widgets.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../../calendar/presentation/widgets/calendar_event_tile.dart';
 import '../../domain/entities/dashboard.dart';
 import '../providers/dashboard_providers.dart';
+import '../widgets/alerts_bell.dart';
 import '../widgets/dashboard_widgets.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -30,16 +32,13 @@ class HomeScreen extends ConsumerWidget {
     final d = dashboard.value;
 
     return Scaffold(
+      appBar: BrandAppBar(actions: [AlertsBellButton(alertCount: d?.alerts.length ?? 0)]),
       body: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
               child: GradientHeader(
-                padding: EdgeInsets.fromLTRB(
-                  AppConstants.pagePadding,
-                  MediaQuery.paddingOf(context).top + 20,
-                  AppConstants.pagePadding,
-                  24,
-                ),
+                floating: true,
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -62,14 +61,6 @@ class HomeScreen extends ConsumerWidget {
                               ),
                             ],
                           ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Icon(Icons.pets, color: Colors.white),
                         ),
                       ],
                     ),
