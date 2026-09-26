@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../appointments/presentation/providers/appointment_providers.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
+import '../../../medications/presentation/providers/medication_providers.dart';
 import '../../../vaccinations/presentation/providers/vaccination_providers.dart';
 import '../../data/datasources/pet_remote_data_source.dart';
 import '../../data/repositories/pet_repository_impl.dart';
@@ -34,6 +35,7 @@ final deletePetProvider = Provider(
   (ref) => DeletePet(ref.watch(petRepositoryProvider), [
     ref.watch(vaccinationRepositoryProvider),
     ref.watch(appointmentRepositoryProvider),
+    ref.watch(medicationRepositoryProvider),
   ]),
 );
 
