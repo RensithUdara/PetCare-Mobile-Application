@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/failure.dart';
+import '../../../../core/widgets/modern_widgets.dart';
 import '../controllers/auth_controller.dart';
 
 /// Scrollable page layout shared by login, register and forgot-password.
@@ -23,41 +24,72 @@ class AuthScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: showBack ? AppBar() : null,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
+      extendBodyBehindAppBar: true,
+      appBar: showBack
+          ? AppBar(foregroundColor: Colors.white, backgroundColor: Colors.transparent)
+          : null,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            GradientHeader(
+              padding: EdgeInsets.fromLTRB(24, MediaQuery.paddingOf(context).top + 32, 24, 72),
+              bottomRadius: 40,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  CircleAvatar(
-                    radius: 32,
-                    backgroundColor: theme.colorScheme.primaryContainer,
-                    child: Icon(Icons.pets, size: 32, color: theme.colorScheme.primary),
+                  Container(
+                    width: 76,
+                    height: 76,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Icon(Icons.pets, size: 40, color: theme.colorScheme.primary),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
                   Text(
                     title,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.w700),
+                        ?.copyWith(color: Colors.white, fontWeight: FontWeight.w800),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Text(
                     subtitle,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium
-                        ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        ?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
                   ),
-                  const SizedBox(height: 32),
-                  ...children,
                 ],
               ),
             ),
-          ),
+            // The form card overlaps the header for a layered look.
+            Transform.translate(
+              offset: const Offset(0, -44),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 460),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: SoftCard(
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+                      radius: 28,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: children,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
