@@ -27,6 +27,18 @@ abstract interface class AuthRemoteDataSource {
   Future<void> sendPasswordResetEmail(String email);
 
   Future<void> signOut();
+
+  /// Sign-in providers of the current user, e.g. `password`, `google.com`.
+  List<String> get providerIds;
+
+  Future<void> reauthenticateWithPassword(String password);
+
+  /// Returns `false` if the user dismissed the account picker.
+  Future<bool> reauthenticateWithGoogle();
+
+  Future<void> updatePassword(String newPassword);
+
+  Future<void> deleteCurrentUser();
 }
 
 class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
@@ -91,5 +103,46 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
   Future<void> signOut() async {
     if (_googleInit != null) await _googleSignIn.signOut();
     await _auth.signOut();
+  }
+
+  User get _user {
+    final user = _auth.currentUser;
+    if (user == null) throw FirebaseAuthException(code: 'user-not-found');
+    return user;
+  }
+
+  @override
+  List<String> get providerIds =>
+      _auth.currentUser?.providerData.map((p) => p.providerId).toList() ?? const [];
+
+  @override
+  Future<void> reauthenticateWithPassword(String password) => _user.reauthenticateWithCredential(
+        EmailAuthProvider.credential(email: _user.email ?? '', password: password),
+      );
+
+  @override
+  Future<bool> reauthenticateWithGoogle() async {
+    _googleInit ??= _googleSignIn.initialize();
+    await _googleInit;
+    final GoogleSignInAccount account;
+    try {
+      account = await _googleSignIn.authenticate();
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) return false;
+      rethrow;
+    }
+    await _user.reauthenticateWithCredential(
+      GoogleAuthProvider.credential(idToken: account.authentication.idToken),
+    );
+    return true;
+  }
+
+  @override
+  Future<void> updatePassword(String newPassword) => _user.updatePassword(newPassword);
+
+  @override
+  Future<void> deleteCurrentUser() async {
+    await _user.delete();
+    if (_googleInit != null) await _googleSignIn.signOut();
   }
 }
