@@ -127,7 +127,7 @@ abstract final class AppTheme {
           elevation: 3,
           shadowColor: scheme.primary.withValues(alpha: 0.5),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          textStyle: text.labelLarge?.copyWith(fontSize: 16, fontWeight: FontWeight.w700),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -135,11 +135,11 @@ abstract final class AppTheme {
           minimumSize: const Size.fromHeight(54),
           side: BorderSide(color: scheme.primary.withValues(alpha: 0.5), width: 1.5),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+          textStyle: text.labelLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w600),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(textStyle: const TextStyle(fontWeight: FontWeight.w700)),
+        style: TextButton.styleFrom(textStyle: text.labelLarge?.copyWith(fontWeight: FontWeight.w700)),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: scheme.primary,
@@ -147,14 +147,14 @@ abstract final class AppTheme {
         elevation: 6,
         highlightElevation: 10,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        extendedTextStyle: const TextStyle(fontWeight: FontWeight.w700),
+        extendedTextStyle: text.labelLarge?.copyWith(fontWeight: FontWeight.w700),
       ),
       chipTheme: ChipThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         side: BorderSide.none,
         backgroundColor: isDark ? scheme.surfaceContainerHigh : const Color(0xFFF1F5F9),
         selectedColor: scheme.primaryContainer,
-        labelStyle: TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w600),
+        labelStyle: text.labelLarge?.copyWith(color: scheme.onSurface, fontWeight: FontWeight.w600),
         showCheckmark: false,
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       ),
@@ -164,7 +164,7 @@ abstract final class AppTheme {
           selectedForegroundColor: scheme.onPrimary,
           side: BorderSide(color: scheme.outlineVariant),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+          textStyle: text.labelLarge?.copyWith(fontWeight: FontWeight.w600),
         ),
       ),
       switchTheme: SwitchThemeData(
@@ -189,7 +189,7 @@ abstract final class AppTheme {
           ),
         ),
         labelTextStyle: WidgetStateProperty.resolveWith(
-          (s) => TextStyle(
+          (s) => (text.labelMedium ?? const TextStyle()).copyWith(
             fontSize: 12,
             fontWeight: s.contains(WidgetState.selected) ? FontWeight.w800 : FontWeight.w500,
             color: s.contains(WidgetState.selected) ? scheme.primary : scheme.onSurfaceVariant,
@@ -197,7 +197,7 @@ abstract final class AppTheme {
         ),
       ),
       tabBarTheme: TabBarThemeData(
-        labelStyle: const TextStyle(fontWeight: FontWeight.w700),
+        labelStyle: text.titleSmall?.copyWith(fontWeight: FontWeight.w700),
         indicatorSize: TabBarIndicatorSize.label,
         dividerColor: Colors.transparent,
         indicator: UnderlineTabIndicator(
@@ -220,7 +220,7 @@ abstract final class AppTheme {
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         backgroundColor: isDark ? scheme.surfaceContainerHighest : AppColors.navy,
-        contentTextStyle: TextStyle(color: isDark ? scheme.onSurface : Colors.white),
+        contentTextStyle: text.bodyMedium?.copyWith(color: isDark ? scheme.onSurface : Colors.white),
       ),
       popupMenuTheme: PopupMenuThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
