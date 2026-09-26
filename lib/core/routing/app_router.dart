@@ -16,6 +16,7 @@ import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/medications/presentation/screens/medication_details_screen.dart';
 import '../../features/medications/presentation/screens/medication_form_screen.dart';
 import '../../features/medications/presentation/screens/medications_screen.dart';
+import '../../features/notifications/presentation/screens/notification_settings_screen.dart';
 import '../../features/onboarding/presentation/providers/onboarding_controller.dart';
 import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/pets/presentation/screens/pet_details_screen.dart';
@@ -64,7 +65,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           _branch(_petsRoute),
           _branch(_calendarRoute),
           _branch(_route(AppRoutes.clinics, (_) => const ClinicsScreen())),
-          _branch(_route(AppRoutes.profile, (_) => const ProfileScreen())),
+          _branch(_route(
+            AppRoutes.profile,
+            (_) => const ProfileScreen(),
+            routes: [_route('notifications', (_) => const NotificationSettingsScreen())],
+          )),
         ],
       ),
     ],

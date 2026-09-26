@@ -18,6 +18,7 @@ abstract final class AppRoutes {
   static const calendar = '/calendar';
   static const clinics = '/clinics';
   static const profile = '/profile';
+  static const notificationSettings = '/profile/notifications';
 
   // ── Pets tab ───────────────────────────────────────────────────────────
   static String petDetails(String petId) => '/pets/$petId';
