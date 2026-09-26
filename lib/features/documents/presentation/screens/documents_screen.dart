@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../pets/presentation/providers/pet_providers.dart';
 import '../../domain/entities/medical_document.dart';
@@ -29,7 +30,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
     void add() => context.push(AppRoutes.documentNew(petId: widget.petId));
 
     return Scaffold(
-      appBar: AppBar(title: Text(petName == null ? 'Documents' : '$petName’s Documents')),
+      appBar: BrandAppBar.page(title: petName == null ? 'Documents' : '$petName’s Documents'),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: add,
         icon: const Icon(Icons.upload_file),

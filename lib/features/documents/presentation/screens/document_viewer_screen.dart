@@ -7,6 +7,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/errors/failure.dart';
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/widgets/app_dialogs.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../pets/presentation/providers/pet_providers.dart';
 import '../../domain/entities/medical_document.dart';
@@ -26,12 +28,12 @@ class DocumentViewerScreen extends ConsumerWidget {
     return ref.watch(documentProvider(documentId)).when(
           loading: () => const Scaffold(body: LoadingView()),
           error: (_, _) => Scaffold(
-            appBar: AppBar(),
+            appBar: const BrandAppBar.page(title: 'Document'),
             body: const ErrorView(message: 'Could not load this document.'),
           ),
           data: (d) => d == null
               ? Scaffold(
-                  appBar: AppBar(),
+                  appBar: const BrandAppBar.page(title: 'Document'),
                   body: const EmptyState(
                     icon: Icons.search_off,
                     title: 'Document not found',
@@ -58,34 +60,21 @@ class _Viewer extends ConsumerWidget {
   }
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        final scheme = Theme.of(context).colorScheme;
-        return AlertDialog(
-          title: const Text('Delete document?'),
-          content: Text('“${document.name}” and its file will be permanently deleted.'),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(0, 40),
-                backgroundColor: scheme.error,
-                foregroundColor: scheme.onError,
-              ),
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Delete'),
-            ),
-          ],
-        );
-      },
+    final confirmed = await showConfirmDialog(
+      context,
+      title: 'Delete document?',
+      message: '“${document.name}” and its file will be permanently deleted.',
+      confirmLabel: 'Delete',
+      icon: Icons.delete_outline_rounded,
+      destructive: true,
     );
-    if (confirmed != true || !context.mounted) return;
+    if (!confirmed || !context.mounted) return;
     final router = GoRouter.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    final navContext = Navigator.of(context, rootNavigator: true).context;
     if (await ref.read(documentEditorControllerProvider.notifier).delete(document)) {
       router.pop();
-      messenger.showSnackBar(const SnackBar(content: Text('Document deleted')));
+      if (navContext.mounted) await showSuccessDialog(navContext, title: 'Document deleted');
     } else {
       messenger.showSnackBar(SnackBar(
         content: Text(ref.read(documentEditorControllerProvider).error?.message ??
@@ -101,8 +90,8 @@ class _Viewer extends ConsumerWidget {
     final busy = ref.watch(documentEditorControllerProvider).isBusy;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(document.name, overflow: TextOverflow.ellipsis),
+      appBar: BrandAppBar.page(
+        title: document.name,
         actions: [
           IconButton(
             tooltip: 'Open in another app',

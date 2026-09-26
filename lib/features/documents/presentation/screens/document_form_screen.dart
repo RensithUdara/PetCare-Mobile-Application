@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/clock.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/widgets/app_dialogs.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/date_field.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../domain/entities/medical_document.dart';
@@ -47,7 +49,7 @@ class DocumentFormScreen extends ConsumerWidget {
               const Scaffold(body: ErrorView(message: 'Could not load this document.')),
           data: (d) => d == null
               ? Scaffold(
-                  appBar: AppBar(),
+                  appBar: const BrandAppBar.page(title: 'Document'),
                   body: const EmptyState(icon: Icons.search_off, title: 'Document not found'),
                 )
               : _DocumentForm(petId: d.petId, initial: d),
@@ -139,10 +141,12 @@ class _DocumentFormState extends ConsumerState<_DocumentForm> {
             ) !=
             null;
     if (!ok || !mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(_isEditing ? 'Document updated' : 'Document uploaded')),
+    await showSuccessDialog(
+      context,
+      title: _isEditing ? 'Document updated' : 'Document uploaded',
+      message: _isEditing ? null : 'It\u2019s safely stored with your pet\u2019s records.',
     );
-    context.pop();
+    if (mounted) context.pop();
   }
 
   @override
@@ -158,7 +162,7 @@ class _DocumentFormState extends ConsumerState<_DocumentForm> {
     const gap = SizedBox(height: 16);
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? 'Edit Document' : 'Add Document')),
+      appBar: BrandAppBar.page(title: _isEditing ? 'Edit Document' : 'Add Document'),
       body: AbsorbPointer(
         absorbing: editor.isBusy,
         child: Form(
