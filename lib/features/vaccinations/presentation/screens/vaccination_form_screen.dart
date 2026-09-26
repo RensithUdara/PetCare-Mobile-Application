@@ -5,11 +5,14 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/domain/reminder_offset.dart';
 import '../../../../core/errors/failure.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/clock.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_dialogs.dart';
 import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/date_field.dart';
+import '../../../../core/widgets/form_widgets.dart';
+import '../../../../core/widgets/modern_widgets.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../core/widgets/suggestion_field.dart';
 import '../../../clinics/presentation/providers/clinic_providers.dart';
@@ -168,156 +171,268 @@ class _VaccinationFormState extends ConsumerState<_VaccinationForm> {
     final theme = Theme.of(context);
     final now = ref.watch(clockProvider)();
     final suggestions = commonVaccinesFor(widget.species);
-    const gap = SizedBox(height: 16);
+    final date = DateFormat.yMMMd();
+    final white80 = Colors.white.withValues(alpha: 0.85);
+    const accent = FeatureAccent.vaccinations;
+    final name = _name.text.trim();
 
     return Scaffold(
       appBar: BrandAppBar.page(title: _isEditing ? 'Edit Vaccination' : 'Add Vaccination'),
+      bottomNavigationBar: FormSaveBar(
+        label: _isEditing ? 'Save Changes' : 'Add Vaccination',
+        icon: _isEditing ? Icons.check_rounded : Icons.vaccines_outlined,
+        busy: busy,
+        busyLabel: 'Saving…',
+        onPressed: _save,
+      ),
       body: AbsorbPointer(
         absorbing: busy,
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
             children: [
-              TextFormField(
-                controller: _name,
-                textCapitalization: TextCapitalization.words,
-                textInputAction: TextInputAction.next,
-                validator: (v) => Validators.required(v, field: 'Vaccine name'),
-                decoration: const InputDecoration(
-                  labelText: 'Vaccine name *',
-                  prefixIcon: Icon(Icons.vaccines_outlined),
-                ),
-              ),
-              if (suggestions.isNotEmpty && !_isEditing) ...[
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
+              // Live summary of the dose being recorded.
+              GradientHeader(
+                floating: true,
+                margin: const EdgeInsets.only(top: 16),
+                gradient: accent.gradient,
+                padding: const EdgeInsets.all(20),
+                child: Row(
                   children: [
-                    for (final s in suggestions)
-                      ActionChip(label: Text(s.name), onPressed: () => _applySuggestion(s)),
-                  ],
-                ),
-              ],
-              gap,
-              Text('Category', style: theme.textTheme.labelLarge),
-              const SizedBox(height: 8),
-              SegmentedButton<VaccineCategory>(
-                segments: [
-                  for (final c in VaccineCategory.values) ButtonSegment(value: c, label: Text(c.label)),
-                ],
-                selected: {_category},
-                showSelectedIcon: false,
-                onSelectionChanged: (s) => setState(() => _category = s.first),
-              ),
-              gap,
-              DateField(
-                label: 'Date administered *',
-                initialValue: _administered,
-                firstDate: DateTime(1990),
-                lastDate: now,
-                clearable: false,
-                icon: Icons.event_available_outlined,
-                validator: (d) => d == null
-                    ? 'Date administered is required'
-                    : Validators.notInFuture(d, now: now),
-                onChanged: (d) => setState(() => _administered = d),
-              ),
-              gap,
-              DateField(
-                key: ValueKey('due-$_dueFieldVersion'),
-                label: 'Next due date',
-                initialValue: _nextDue,
-                firstDate: DateTime(1990),
-                lastDate: DateTime(now.year + 10),
-                icon: Icons.event_repeat_outlined,
-                validator: _validateDue,
-                onChanged: (d) => setState(() => _nextDue = d),
-              ),
-              if (_administered != null) ...[
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    for (final (label, months) in const [
-                      ('+ 1 month', 1),
-                      ('+ 6 months', 6),
-                      ('+ 1 year', 12),
-                      ('+ 3 years', 36),
-                    ])
-                      ActionChip(
-                        label: Text(label),
-                        onPressed: () =>
-                            setState(() => _setDue(addMonths(_administered!, months))),
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
                       ),
+                      child: const Icon(Icons.vaccines_rounded, color: Colors.white, size: 32),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  name.isEmpty ? 'New vaccination' : name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.titleMedium
+                                      ?.copyWith(color: Colors.white, fontWeight: FontWeight.w800),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.22),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(_category.label,
+                                    style: theme.textTheme.labelSmall
+                                        ?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Icon(Icons.event_available_rounded, size: 16, color: white80),
+                              const SizedBox(width: 6),
+                              Text(_administered == null ? 'Pick the date given' : 'Given ${date.format(_administered!)}',
+                                  style: theme.textTheme.bodyMedium?.copyWith(color: white80)),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Icon(Icons.event_repeat_rounded, size: 16, color: white80),
+                              const SizedBox(width: 6),
+                              Text(_nextDue == null ? 'No next dose set' : 'Next due ${date.format(_nextDue!)}',
+                                  style: theme.textTheme.bodyMedium?.copyWith(color: white80)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-              ],
-              gap,
-              DropdownButtonFormField<ReminderOffset?>(
-                initialValue: _nextDue == null ? null : _reminder,
-                onChanged: _nextDue == null ? null : (r) => setState(() => _reminder = r),
-                decoration: InputDecoration(
-                  labelText: 'Reminder',
-                  prefixIcon: const Icon(Icons.notifications_outlined),
-                  helperText: _nextDue == null
-                      ? 'Set a next due date to enable reminders'
-                      : _reminder == null
-                          ? null
-                          : 'We’ll remind you on '
-                              '${DateFormat.yMMMd().format(_reminder!.reminderDateFor(_nextDue!))}',
-                ),
-                items: [
-                  const DropdownMenuItem(value: null, child: Text('No reminder')),
-                  for (final r in ReminderOffset.values)
-                    DropdownMenuItem(value: r, child: Text(r.label)),
+              ),
+              FormSection(
+                title: 'Vaccine',
+                icon: Icons.vaccines_outlined,
+                accent: accent,
+                children: [
+                  TextFormField(
+                    controller: _name,
+                    textCapitalization: TextCapitalization.words,
+                    textInputAction: TextInputAction.next,
+                    onChanged: (_) => setState(() {}),
+                    validator: (v) => Validators.required(v, field: 'Vaccine name'),
+                    decoration: const InputDecoration(
+                      labelText: 'Vaccine name *',
+                      prefixIcon: Icon(Icons.vaccines_outlined),
+                    ),
+                  ),
+                  if (suggestions.isNotEmpty && !_isEditing)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const FieldLabel('Common vaccines'),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (final s in suggestions)
+                              ActionChip(
+                                avatar: Icon(Icons.bolt_rounded, size: 16, color: accent.color),
+                                label: Text(s.name),
+                                backgroundColor: _name.text.trim() == s.name ? accent.color.withValues(alpha: 0.18) : null,
+                                onPressed: () => _applySuggestion(s),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const FieldLabel('Category'),
+                      TileGrid(
+                        children: [
+                          for (final c in VaccineCategory.values)
+                            SelectTile(
+                              label: c.label,
+                              icon: switch (c) {
+                                VaccineCategory.core => Icons.verified_user_outlined,
+                                VaccineCategory.nonCore => Icons.shield_outlined,
+                                VaccineCategory.other => Icons.more_horiz_rounded,
+                              },
+                              accent: accent,
+                              selected: _category == c,
+                              onTap: () => setState(() => _category = c),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ],
               ),
-              const SizedBox(height: 24),
-              Text('Administered by', style: theme.textTheme.titleSmall),
-              const SizedBox(height: 12),
-              SuggestionField(
-                controller: _vet,
-                suggestions: ref.watch(vetNameSuggestionsProvider),
-                label: 'Veterinarian',
-                icon: Icons.person_outline,
+              FormSection(
+                title: 'Dates & reminder',
+                icon: Icons.event_outlined,
+                accent: FeatureAccent.calendar,
+                children: [
+                  DateField(
+                    label: 'Date administered *',
+                    initialValue: _administered,
+                    firstDate: DateTime(1990),
+                    lastDate: now,
+                    clearable: false,
+                    icon: Icons.event_available_outlined,
+                    validator: (d) => d == null ? 'Date administered is required' : Validators.notInFuture(d, now: now),
+                    onChanged: (d) => setState(() => _administered = d),
+                  ),
+                  DateField(
+                    key: ValueKey('due-$_dueFieldVersion'),
+                    label: 'Next due date',
+                    initialValue: _nextDue,
+                    firstDate: DateTime(1990),
+                    lastDate: DateTime(now.year + 10),
+                    icon: Icons.event_repeat_outlined,
+                    validator: _validateDue,
+                    onChanged: (d) => setState(() => _nextDue = d),
+                  ),
+                  if (_administered != null)
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final (label, months) in const [
+                          ('+ 1 month', 1),
+                          ('+ 6 months', 6),
+                          ('+ 1 year', 12),
+                          ('+ 3 years', 36),
+                        ])
+                          ActionChip(
+                            avatar: Icon(Icons.add_alarm_rounded, size: 16, color: FeatureAccent.calendar.color),
+                            label: Text(label.substring(2)),
+                            onPressed: () => setState(() => _setDue(addMonths(_administered!, months))),
+                          ),
+                      ],
+                    ),
+                  DropdownButtonFormField<ReminderOffset?>(
+                    initialValue: _nextDue == null ? null : _reminder,
+                    isExpanded: true,
+                    onChanged: _nextDue == null ? null : (r) => setState(() => _reminder = r),
+                    decoration: InputDecoration(
+                      labelText: 'Reminder',
+                      prefixIcon: const Icon(Icons.notifications_outlined),
+                      helperMaxLines: 2,
+                      helperText: _nextDue == null
+                          ? 'Set a next due date to enable reminders'
+                          : _reminder == null
+                              ? null
+                              : 'We’ll remind you on ${date.format(_reminder!.reminderDateFor(_nextDue!))}',
+                    ),
+                    items: [
+                      const DropdownMenuItem(value: null, child: Text('No reminder')),
+                      for (final r in ReminderOffset.values) DropdownMenuItem(value: r, child: Text(r.label)),
+                    ],
+                  ),
+                ],
               ),
-              gap,
-              SuggestionField(
-                controller: _clinic,
-                suggestions: ref.watch(clinicNameSuggestionsProvider),
-                label: 'Clinic',
+              FormSection(
+                title: 'Administered by',
                 icon: Icons.local_hospital_outlined,
+                accent: FeatureAccent.clinics,
+                children: [
+                  SuggestionField(
+                    controller: _vet,
+                    suggestions: ref.watch(vetNameSuggestionsProvider),
+                    label: 'Veterinarian',
+                    icon: Icons.person_outline,
+                  ),
+                  SuggestionField(
+                    controller: _clinic,
+                    suggestions: ref.watch(clinicNameSuggestionsProvider),
+                    label: 'Clinic',
+                    icon: Icons.local_hospital_outlined,
+                  ),
+                  TextFormField(
+                    controller: _batch,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(
+                      labelText: 'Batch number',
+                      hintText: 'From the vaccine sticker',
+                      prefixIcon: Icon(Icons.qr_code_2),
+                    ),
+                  ),
+                ],
               ),
-              gap,
-              TextFormField(
-                controller: _batch,
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Batch number',
-                  prefixIcon: Icon(Icons.qr_code_2),
-                ),
-              ),
-              gap,
-              TextFormField(
-                controller: _notes,
-                minLines: 3,
-                maxLines: 6,
-                maxLength: 500,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(labelText: 'Notes', alignLabelWithHint: true),
-              ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: busy ? null : _save,
-                child: busy
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2.5),
-                      )
-                    : Text(_isEditing ? 'Save Changes' : 'Add Vaccination'),
+              FormSection(
+                title: 'Notes',
+                icon: Icons.sticky_note_2_outlined,
+                accent: FeatureAccent.documents,
+                children: [
+                  TextFormField(
+                    controller: _notes,
+                    minLines: 3,
+                    maxLines: 6,
+                    maxLength: 500,
+                    textCapitalization: TextCapitalization.sentences,
+                    decoration: const InputDecoration(
+                      labelText: 'Notes',
+                      hintText: 'Reactions, advice from the vet…',
+                      alignLabelWithHint: true,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
