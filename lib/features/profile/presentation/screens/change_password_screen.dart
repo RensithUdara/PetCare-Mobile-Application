@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/widgets/app_dialogs.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/modern_widgets.dart';
 import '../controllers/account_controller.dart';
 
@@ -36,8 +38,12 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
         .read(accountControllerProvider.notifier)
         .changePassword(currentPassword: _current.text, newPassword: _new.text);
     if (!ok || !mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password changed')));
-    context.pop();
+    await showSuccessDialog(
+      context,
+      title: 'Password changed',
+      message: 'Use your new password the next time you sign in.',
+    );
+    if (mounted) context.pop();
   }
 
   Widget _field(int i, TextEditingController c, String label, FormFieldValidator<String> validator,
@@ -66,7 +72,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     final state = ref.watch(accountControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Change password')),
+      appBar: const BrandAppBar.page(title: 'Change password'),
       body: Form(
         key: _formKey,
         child: ListView(

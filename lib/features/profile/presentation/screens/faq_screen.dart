@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/modern_widgets.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../widgets/faq_content.dart';
@@ -37,7 +38,7 @@ class _FaqScreenState extends State<FaqScreen> {
     final groups = _visible;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Help & FAQ')),
+      appBar: const BrandAppBar.page(title: 'Help & FAQ'),
       body: ListView(
         padding: const EdgeInsets.only(bottom: 32),
         children: [

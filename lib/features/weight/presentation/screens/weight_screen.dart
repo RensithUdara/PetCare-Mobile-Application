@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/utils/clock.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/date_field.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../pets/presentation/providers/pet_providers.dart';
@@ -58,7 +59,7 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(petName == null ? 'Weight' : '$petName’s Weight')),
+      appBar: BrandAppBar.page(title: petName == null ? 'Weight' : '$petName’s Weight'),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _logWeight,
         icon: const Icon(Icons.add),

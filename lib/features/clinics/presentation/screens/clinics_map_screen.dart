@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../../../core/errors/failure.dart';
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../domain/entities/clinic.dart';
 import '../../domain/logic/geo.dart';
@@ -101,7 +102,7 @@ class _ClinicsMapScreenState extends ConsumerState<ClinicsMapScreen> {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Clinic map')),
+      appBar: const BrandAppBar.page(title: 'Clinic map'),
       body: Column(
         children: [
           Expanded(

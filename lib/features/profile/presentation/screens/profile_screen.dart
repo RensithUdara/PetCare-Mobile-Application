@@ -8,6 +8,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_mode_controller.dart';
+import '../../../../core/widgets/app_dialogs.dart';
 import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/modern_widgets.dart';
 import '../../../clinics/presentation/providers/clinic_providers.dart';
@@ -181,23 +182,15 @@ class ProfileScreen extends ConsumerWidget {
       );
 
   Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        icon: const IconBadge(icon: Icons.logout, accent: FeatureAccent.settings, size: 52),
-        title: const Text('Log out?'),
-        content: const Text('You will need to sign in again to access your pets.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          FilledButton(
-            style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Log out'),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      title: 'Log out?',
+      message: 'You will need to sign in again to access your pets.',
+      confirmLabel: 'Log out',
+      icon: Icons.logout_rounded,
+      accent: FeatureAccent.settings,
     );
-    if (confirmed == true) await ref.read(accountControllerProvider.notifier).signOut();
+    if (confirmed) await ref.read(accountControllerProvider.notifier).signOut();
   }
 }
 

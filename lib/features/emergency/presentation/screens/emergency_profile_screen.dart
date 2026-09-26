@@ -7,6 +7,8 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/errors/failure.dart';
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/widgets/app_dialogs.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../../pets/domain/entities/pet.dart';
@@ -27,7 +29,7 @@ class EmergencyProfileScreen extends ConsumerWidget {
     final pet = ref.watch(petProvider(petId)).value;
     final settings = ref.watch(emergencyProfileProvider(petId));
     return Scaffold(
-      appBar: AppBar(title: const Text('Emergency profile')),
+      appBar: const BrandAppBar.page(title: 'Emergency profile'),
       body: pet == null
           ? const LoadingView()
           : settings.when(
@@ -167,9 +169,7 @@ class _ManageState extends ConsumerState<_Manage> {
         .save(widget.pet, settings ?? _current);
     if (!mounted) return;
     if (!ok) return _showError(context, ref);
-    if (successMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(successMessage)));
-    }
+    if (successMessage != null) await showSuccessDialog(context, title: successMessage);
   }
 
   Future<void> _toggleEnabled(bool enabled) async {

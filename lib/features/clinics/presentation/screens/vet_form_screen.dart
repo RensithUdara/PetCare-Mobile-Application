@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/failure.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/widgets/app_dialogs.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../domain/entities/clinic.dart';
 import '../controllers/clinic_editor_controller.dart';
@@ -26,7 +28,7 @@ class VetFormScreen extends ConsumerWidget {
             final vet = vets.where((v) => v.id == vetId).firstOrNull;
             return vet == null
                 ? Scaffold(
-                    appBar: AppBar(),
+                    appBar: const BrandAppBar.page(title: 'Veterinarian'),
                     body: const EmptyState(icon: Icons.search_off, title: 'Veterinarian not found'),
                   )
                 : _VetForm(initial: vet, clinicId: vet.clinicId);
@@ -85,10 +87,24 @@ class _VetFormState extends ConsumerState<_VetForm> {
         ));
     if (!mounted) return;
     if (id == null) return _showError();
-    context.pop();
+    await showSuccessDialog(
+      context,
+      title: _isEditing ? 'Veterinarian updated' : 'Veterinarian saved',
+      message: _name.text.trim(),
+    );
+    if (mounted) context.pop();
   }
 
   Future<void> _delete() async {
+    final confirmed = await showConfirmDialog(
+      context,
+      title: 'Delete ${widget.initial!.name}?',
+      message: 'This removes the veterinarian from your contacts.',
+      confirmLabel: 'Delete',
+      icon: Icons.delete_outline_rounded,
+      destructive: true,
+    );
+    if (!confirmed || !mounted) return;
     final ok = await ref.read(clinicEditorControllerProvider.notifier).deleteVet(widget.initial!.id);
     if (!mounted) return;
     if (!ok) return _showError();
@@ -103,8 +119,8 @@ class _VetFormState extends ConsumerState<_VetForm> {
     const gap = SizedBox(height: 16);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Veterinarian' : 'Add Veterinarian'),
+      appBar: BrandAppBar.page(
+        title: _isEditing ? 'Edit Veterinarian' : 'Add Veterinarian',
         actions: [
           if (_isEditing)
             IconButton(

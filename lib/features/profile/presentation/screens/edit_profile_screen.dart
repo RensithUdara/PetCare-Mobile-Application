@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/widgets/app_dialogs.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/modern_widgets.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../pets/domain/entities/photo_change.dart';
@@ -20,7 +22,7 @@ class EditProfileScreen extends ConsumerWidget {
     return ref.watch(userProfileProvider).when(
           loading: () => const Scaffold(body: LoadingView()),
           error: (_, _) => Scaffold(
-            appBar: AppBar(),
+            appBar: const BrandAppBar.page(title: 'Edit profile'),
             body: ErrorView(
               message: 'Could not load your profile.',
               onRetry: () => ref.invalidate(userProfileProvider),
@@ -69,8 +71,8 @@ class _EditProfileFormState extends ConsumerState<_EditProfileForm> {
           photo: _photo,
         );
     if (!ok || !mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated')));
-    context.pop();
+    await showSuccessDialog(context, title: 'Profile updated', message: 'Your details are saved.');
+    if (mounted) context.pop();
   }
 
   @override
@@ -85,7 +87,7 @@ class _EditProfileFormState extends ConsumerState<_EditProfileForm> {
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit profile')),
+      appBar: const BrandAppBar.page(title: 'Edit profile'),
       body: Form(
         key: _formKey,
         child: ListView(

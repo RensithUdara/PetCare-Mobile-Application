@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/modern_widgets.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../pets/domain/entities/pet.dart';
@@ -20,7 +21,7 @@ class PublicProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: const Text('PetCare Emergency Profile')),
+      appBar: const BrandAppBar.page(title: 'PetCare Emergency Profile'),
       body: ref.watch(publicProfileProvider(publicId)).when(
             loading: () => const LoadingView(),
             error: (_, _) => ErrorView(

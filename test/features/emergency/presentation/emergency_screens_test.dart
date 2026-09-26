@@ -63,12 +63,15 @@ void main() {
     await tester.tap(find.text('Microchip ID'));
     await tester.enterText(find.widgetWithText(TextFormField, 'Medical warnings'), 'Diabetic');
     await tester.tap(find.text('Save & Publish'));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
 
     final page = repo.public['PC-8A72F9K']!;
     expect(page.microchipId, '985112004455667');
     expect(page.medicalWarnings, 'Diabetic');
+    // Success popup, which closes itself.
     expect(find.text('Emergency profile updated'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.text('Emergency profile updated'), findsNothing);
   });
 
   group('PublicProfileScreen', () {

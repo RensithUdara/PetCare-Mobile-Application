@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_dialogs.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/modern_widgets.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../appointments/presentation/widgets/pet_appointments_tile.dart';
@@ -30,7 +32,7 @@ class PetDetailsScreen extends ConsumerWidget {
     return ref.watch(petProvider(petId)).when(
           loading: () => const Scaffold(body: LoadingView()),
           error: (_, _) => Scaffold(
-            appBar: AppBar(),
+            appBar: const BrandAppBar.page(title: 'Pet profile'),
             body: ErrorView(
               message: 'Could not load this pet.',
               onRetry: () => ref.invalidate(petProvider(petId)),
@@ -38,7 +40,7 @@ class PetDetailsScreen extends ConsumerWidget {
           ),
           data: (pet) => pet == null
               ? Scaffold(
-                  appBar: AppBar(),
+                  appBar: const BrandAppBar.page(title: 'Pet profile'),
                   body: const EmptyState(
                     icon: Icons.search_off,
                     title: 'Pet not found',
@@ -58,39 +60,30 @@ class _PetDetails extends ConsumerWidget {
   final Pet pet;
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Delete ${pet.name}?'),
-        content: const Text(
-          'This permanently removes the pet profile, photo and all health records. '
+    final confirmed = await showConfirmDialog(
+      context,
+      title: 'Delete ${pet.name}?',
+      message: 'This permanently removes the pet profile, photo and all health records. '
           'This cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              minimumSize: const Size(0, 40),
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
-            ),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Delete',
+      icon: Icons.delete_outline_rounded,
+      destructive: true,
     );
-    if (confirmed != true || !context.mounted) return;
+    if (!confirmed || !context.mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
+    final navContext = Navigator.of(context, rootNavigator: true).context;
     final ok = await ref.read(petEditorControllerProvider.notifier).delete(pet.id);
     if (ok) {
       router.go(AppRoutes.pets);
-      messenger.showSnackBar(SnackBar(content: Text('${pet.name} deleted')));
+      if (navContext.mounted) {
+        await showSuccessDialog(
+          navContext,
+          title: '${pet.name} deleted',
+          message: 'The profile and all of ${pet.name}\u2019s records were removed.',
+        );
+      }
     } else {
       final error = ref.read(petEditorControllerProvider).error;
       messenger.showSnackBar(
@@ -107,9 +100,8 @@ class _PetDetails extends ConsumerWidget {
     final dateFormat = DateFormat.yMMMd();
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        foregroundColor: Colors.white,
+      appBar: BrandAppBar.page(
+        title: 'Pet profile',
         actions: [
           IconButton(
             tooltip: 'Edit',
@@ -137,7 +129,8 @@ class _PetDetails extends ConsumerWidget {
         padding: const EdgeInsets.only(bottom: 32),
         children: [
           GradientHeader(
-            padding: EdgeInsets.fromLTRB(20, MediaQuery.paddingOf(context).top + 48, 20, 28),
+            floating: true,
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
             child: Column(
               children: [
                 Hero(
