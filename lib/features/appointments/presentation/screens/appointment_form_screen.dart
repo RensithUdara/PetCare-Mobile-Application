@@ -164,6 +164,7 @@ class _AppointmentFormState extends ConsumerState<_AppointmentForm> {
               // Live summary of the visit being booked.
               GradientHeader(
                 floating: true,
+                margin: const EdgeInsets.only(top: 16),
                 gradient: FeatureAccent.appointments.gradient,
                 padding: const EdgeInsets.all(20),
                 child: Row(
