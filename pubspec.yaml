@@ -49,6 +49,10 @@ dependencies:
   freezed_annotation: ^3.1.0
   meta: ^1.16.0
   table_calendar: ^3.2.1
+  flutter_local_notifications: ^20.1.0
+  timezone: ^0.10.1
+  flutter_timezone: ^5.1.0
+  firebase_messaging: ^16.7.0
 
 dev_dependencies:
   flutter_test:
