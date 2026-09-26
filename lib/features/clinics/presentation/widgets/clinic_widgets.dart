@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/modern_widgets.dart';
 import '../../domain/entities/clinic.dart';
 import '../providers/clinic_providers.dart';
 
@@ -163,10 +165,7 @@ class ClinicCard extends StatelessWidget {
       child: ListTile(
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        leading: CircleAvatar(
-          backgroundColor: theme.colorScheme.primaryContainer,
-          child: Icon(Icons.local_hospital, color: theme.colorScheme.primary),
-        ),
+        leading: const IconBadge(icon: Icons.local_hospital, accent: FeatureAccent.clinics),
         title: Row(
           children: [
             Flexible(child: Text(clinic.name, overflow: TextOverflow.ellipsis)),
