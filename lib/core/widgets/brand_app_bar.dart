@@ -4,18 +4,30 @@ import 'package:flutter/services.dart';
 import '../constants/app_constants.dart';
 import '../theme/app_colors.dart';
 
-/// Colourful branded app bar for the main tabs: brand gradient reaching
-/// under the status bar, soft decorative circles, the logo tile with a bold
-/// title in the centre, and glass-style [BrandActionButton]s on the right.
+/// Colourful branded app bar: brand gradient reaching under the status
+/// bar, soft decorative circles and a bold white title.
+///
+/// * [BrandAppBar.new] — main tabs: logo tile + title in the centre.
+/// * [BrandAppBar.page] — every other screen: glass back button, title.
+///
+/// Icons, text buttons and tabs placed in it are styled white.
 class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
   const BrandAppBar({
     super.key,
     this.title = AppConstants.appName,
     this.actions = const [],
     this.bottom,
-  });
+  }) : _page = false;
+
+  const BrandAppBar.page({
+    super.key,
+    required this.title,
+    this.actions = const [],
+    this.bottom,
+  }) : _page = true;
 
   final String title;
+  final bool _page;
 
   /// Usually [BrandActionButton]s.
   final List<Widget> actions;
@@ -24,28 +36,65 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// on the gradient.
   final PreferredSizeWidget? bottom;
 
-  static const _toolbarHeight = 72.0;
+  double get _toolbarHeight => _page ? 66 : 72;
 
   @override
   Size get preferredSize => Size.fromHeight(_toolbarHeight + (bottom?.preferredSize.height ?? 0));
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final gradient = isDark ? AppColors.brandGradientDark : AppColors.brandGradient;
+    final route = ModalRoute.of(context);
+    final canPop = route?.canPop ?? false;
+    final isDialog = route is PageRoute && route.fullscreenDialog;
+    const white70 = Color(0xD9FFFFFF);
 
-    return AppBar(
+    final Widget? leading;
+    final double leadingWidth;
+    if (_page) {
+      leading = canPop
+          ? Padding(
+              padding: const EdgeInsets.only(left: 16),
+              child: Center(
+                child: BrandActionButton(
+                  icon: isDialog ? Icons.close_rounded : Icons.arrow_back_rounded,
+                  tooltip: isDialog ? 'Close' : 'Back',
+                  onPressed: () => Navigator.of(context).maybePop(),
+                ),
+              ),
+            )
+          : null;
+      leadingWidth = canPop ? 68 : 16;
+    } else {
+      leading = const SizedBox.shrink();
+      // Keeps the title centred when there are actions on the right only.
+      leadingWidth = actions.isEmpty ? 0 : 16.0 + 44 * actions.length + 8 * (actions.length - 1);
+    }
+
+    final bar = AppBar(
       toolbarHeight: _toolbarHeight,
       centerTitle: true,
       automaticallyImplyLeading: false,
       backgroundColor: Colors.transparent,
       foregroundColor: Colors.white,
       systemOverlayStyle: SystemUiOverlayStyle.light,
-      // Keeps the title centred when there are actions on the right only.
-      leadingWidth: actions.isEmpty ? 0 : 16.0 + 44 * actions.length + 8 * (actions.length - 1),
-      leading: const SizedBox.shrink(),
-      titleSpacing: 0,
-      title: _BrandTitle(title: title),
+      leadingWidth: leadingWidth,
+      leading: leading,
+      titleSpacing: _page ? 12 : 0,
+      title: _page
+          ? Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.2,
+              ),
+            )
+          : _BrandTitle(title: title),
       actions: [
         for (final (i, action) in actions.indexed) ...[
           if (i > 0) const SizedBox(width: 8),
@@ -75,6 +124,28 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
       ),
+    );
+
+    // White text buttons and tabs on the gradient.
+    return Theme(
+      data: theme.copyWith(
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.white,
+            disabledForegroundColor: Colors.white54,
+            textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+          ),
+        ),
+        tabBarTheme: theme.tabBarTheme.copyWith(
+          labelColor: Colors.white,
+          unselectedLabelColor: white70,
+          indicator: const UnderlineTabIndicator(
+            borderSide: BorderSide(color: Colors.white, width: 3),
+            borderRadius: BorderRadius.all(Radius.circular(3)),
+          ),
+        ),
+      ),
+      child: bar,
     );
   }
 }
