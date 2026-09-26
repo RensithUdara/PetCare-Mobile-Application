@@ -1,0 +1,10 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["REPLACE_WITH_TEAM_ID.com.petcare.petcare"],
+        "components": [{ "/": "/p/*", "comment": "Pet emergency profiles" }]
+      }
+    ]
+  }
+}
