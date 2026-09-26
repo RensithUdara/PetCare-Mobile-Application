@@ -46,6 +46,9 @@ void main() {
       AppRoutes.calendarMedication('m1'),
       AppRoutes.medicationNew('p1'),
       AppRoutes.medicationEdit('m1'),
+      AppRoutes.homeAppointment('a1'),
+      AppRoutes.homeVaccination('v1'),
+      AppRoutes.homeMedication('m1'),
     ];
 
     for (final path in paths) {
