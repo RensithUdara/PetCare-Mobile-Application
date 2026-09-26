@@ -8,6 +8,7 @@ import '../../../../core/widgets/state_views.dart';
 import '../../domain/entities/pet.dart';
 import '../../domain/logic/pet_age.dart';
 import '../../../appointments/presentation/widgets/pet_appointments_tile.dart';
+import '../../../medications/presentation/widgets/medication_widgets.dart';
 import '../../../vaccinations/presentation/widgets/pet_vaccinations_tile.dart';
 import '../controllers/pet_editor_controller.dart';
 import '../providers/pet_providers.dart';
@@ -199,7 +200,7 @@ class _PetDetails extends ConsumerWidget {
                 const Divider(height: 1),
                 PetAppointmentsTile(petId: pet.id),
                 const Divider(height: 1),
-                const _RecordTile(icon: Icons.medication_outlined, title: 'Medications'),
+                PetMedicationsTile(petId: pet.id),
                 const Divider(height: 1),
                 const _RecordTile(icon: Icons.description_outlined, title: 'Documents'),
               ],
