@@ -59,6 +59,7 @@ await signInWithCredential(
 );
 await setDoc(doc(admin.db, 'users', admin.auth.currentUser.uid), { fullName: 'Ayesha Admin', email: 'admin@petcare.test', createdAt: serverTimestamp() });
 await admin.call('bootstrapAdmin');
+await admin.auth.currentUser.getIdToken(true); // pick up the new admin claim
 
 // ── Vets ────────────────────────────────────────────────────────────────
 const vet = client('vet');
