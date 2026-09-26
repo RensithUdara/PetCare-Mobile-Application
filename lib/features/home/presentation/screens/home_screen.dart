@@ -5,9 +5,9 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/clock.dart';
 import '../../../../core/utils/greeting.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/modern_widgets.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
