@@ -45,8 +45,13 @@ class FakePushMessaging implements PushMessagingRepository {
   final foreground = StreamController<PushMessage>.broadcast();
   final opened = StreamController<String>.broadcast();
 
+  bool failPermission = false;
+
   @override
-  Future<bool> requestPermission() async => true;
+  Future<bool> requestPermission() async {
+    if (failPermission) throw StateError('No Google Play services');
+    return true;
+  }
 
   @override
   Future<String?> getToken() async => token;

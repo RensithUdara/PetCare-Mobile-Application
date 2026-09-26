@@ -8,9 +8,16 @@ class RequestNotificationPermission {
   final ReminderScheduler _scheduler;
   final PushMessagingRepository _push;
 
+  /// Whether local notifications are allowed. Push permission is best
+  /// effort: it can fail without Google Play services (e.g. emulators) and
+  /// must not block local reminders.
   Future<bool> call() async {
     final local = await _scheduler.requestPermission();
-    await _push.requestPermission();
+    try {
+      await _push.requestPermission();
+    } catch (_) {
+      // Push unavailable on this device; local reminders still work.
+    }
     return local;
   }
 }

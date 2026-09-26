@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_dialogs.dart';
 import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/modern_widgets.dart';
 import '../../domain/entities/reminder.dart';
@@ -98,19 +99,90 @@ class NotificationSettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
-          OutlinedButton.icon(
-            onPressed: () async {
-              final messenger = ScaffoldMessenger.of(context);
-              try {
-                await ref.read(requestNotificationPermissionProvider)();
-                await ref.read(showTestNotificationProvider)();
-              } catch (_) {
-                messenger.showSnackBar(
-                  const SnackBar(content: Text('Could not send a test notification.')),
-                );
-              }
-            },
-            icon: const Icon(Icons.send_outlined),
+          const _TestNotificationCard(),
+        ],
+      ),
+    );
+  }
+}
+
+/// Sends a notification right away so the user can check reminders reach them.
+class _TestNotificationCard extends ConsumerStatefulWidget {
+  const _TestNotificationCard();
+
+  @override
+  ConsumerState<_TestNotificationCard> createState() => _TestNotificationCardState();
+}
+
+class _TestNotificationCardState extends ConsumerState<_TestNotificationCard> {
+  bool _busy = false;
+
+  Future<void> _send() async {
+    setState(() => _busy = true);
+    try {
+      final granted = await ref.read(requestNotificationPermissionProvider)();
+      if (!mounted) return;
+      if (!granted) {
+        await showConfirmDialog(
+          context,
+          title: 'Notifications are blocked',
+          message: 'Allow notifications for PetCare in your phone’s Settings → Apps → PetCare → '
+              'Notifications, then try again.',
+          confirmLabel: 'OK',
+          cancelLabel: 'Close',
+          icon: Icons.notifications_off_outlined,
+          accent: FeatureAccent.emergency,
+        );
+        return;
+      }
+      await ref.read(showTestNotificationProvider)();
+      if (!mounted) return;
+      await showSuccessDialog(
+        context,
+        title: 'Test notification sent',
+        message: 'Check your notification shade — it should appear in a few seconds.',
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not send a test notification.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SoftCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const IconBadge(icon: Icons.notifications_active_outlined, accent: FeatureAccent.appointments),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Test your reminders',
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                    Text('Send a notification now to check it reaches this phone.',
+                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          FilledButton.icon(
+            onPressed: _busy ? null : _send,
+            icon: _busy
+                ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2.5))
+                : const Icon(Icons.send_rounded),
             label: const Text('Send test notification'),
           ),
         ],

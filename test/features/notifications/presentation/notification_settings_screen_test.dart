@@ -13,16 +13,18 @@ import '../../../helpers/pump_screen.dart';
 void main() {
   late SharedPreferences prefs;
   late FakeReminderScheduler scheduler;
+  late FakePushMessaging push;
 
   Future<void> pump(WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({});
     prefs = await SharedPreferences.getInstance();
     scheduler = FakeReminderScheduler();
+    push = FakePushMessaging();
     await pumpScreen(tester, const NotificationSettingsScreen(), overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
       currentUserIdProvider.overrideWithValue(null),
       reminderSchedulerProvider.overrideWithValue(scheduler),
-      pushMessagingRepositoryProvider.overrideWithValue(FakePushMessaging()),
+      pushMessagingRepositoryProvider.overrideWithValue(push),
       deviceRegistryProvider.overrideWithValue(FakeDeviceRegistry()),
     ]);
   }
@@ -48,9 +50,35 @@ void main() {
     await pump(tester);
 
     await tester.tap(find.text('Send test notification'));
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(scheduler.permissionRequests, 1);
     expect(scheduler.shown.single.title, contains('reminders are on'));
+    expect(find.text('Test notification sent'), findsOneWidget);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('test notification still works when push is unavailable', (tester) async {
+    await pump(tester);
+    push.failPermission = true; // e.g. no Google Play services on an emulator
+
+    await tester.tap(find.text('Send test notification'));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(scheduler.shown, hasLength(1));
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('explains when notifications are blocked', (tester) async {
+    await pump(tester);
+    scheduler.grantPermission = false;
+
+    await tester.tap(find.text('Send test notification'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Notifications are blocked'), findsOneWidget);
+    expect(scheduler.shown, isEmpty);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
   });
 }
