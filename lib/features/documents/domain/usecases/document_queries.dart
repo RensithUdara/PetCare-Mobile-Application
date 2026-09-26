@@ -1,4 +1,5 @@
 import '../entities/medical_document.dart';
+import '../repositories/document_file_repository.dart';
 import '../repositories/document_repository.dart';
 
 int _newestFirst(MedicalDocument a, MedicalDocument b) {
@@ -37,10 +38,19 @@ class WatchDocument {
       _repository.watchOne(ownerId, documentId);
 }
 
+/// Deletes the record and file, and drops any cached copy on this device.
 class DeleteDocument {
-  const DeleteDocument(this._repository);
+  const DeleteDocument(this._repository, [this._files]);
 
   final DocumentRepository _repository;
+  final DocumentFileRepository? _files;
 
-  Future<void> call(MedicalDocument document) => _repository.delete(document);
+  Future<void> call(MedicalDocument document) async {
+    await _repository.delete(document);
+    try {
+      await _files?.evict(document);
+    } catch (_) {
+      // A stale cache entry is harmless.
+    }
+  }
 }

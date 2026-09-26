@@ -65,29 +65,30 @@ class DocumentRepositoryImpl implements DocumentRepository {
   @override
   Future<void> save(MedicalDocument document) {
     assert(!document.isNew, 'Document id must be set before saving');
-    return guardFirebase(
+    return guardFirebaseWrite(
       () => _remote.save(DocumentModel.fromEntity(document)),
+      label: 'Save document',
       message: 'Could not save document. Please try again.',
     );
   }
 
   @override
-  Future<void> delete(MedicalDocument document) => guardFirebase(() async {
+  Future<void> delete(MedicalDocument document) => guardFirebaseWrite(() async {
         // Record first: a leftover file is invisible, a leftover record is broken.
         await _remote.deleteRecord(document.ownerId, document.id);
         try {
           await _remote.deleteFile(document.storagePath);
         } catch (_) {}
-      }, message: 'Could not delete document. Please try again.');
+      }, label: 'Delete document', message: 'Could not delete document. Please try again.');
 
   @override
   Future<void> deleteAllForPet({required String ownerId, required String petId}) =>
-      guardFirebase(() async {
+      guardFirebaseWrite(() async {
         for (final doc in await _remote.listForPet(ownerId, petId)) {
           await _remote.deleteRecord(ownerId, doc.id);
           try {
             await _remote.deleteFile(doc.storagePath);
           } catch (_) {}
         }
-      }, message: 'Could not delete this pet’s documents. Please try again.');
+      }, label: 'Delete documents', message: 'Could not delete this pet’s documents. Please try again.');
 }
