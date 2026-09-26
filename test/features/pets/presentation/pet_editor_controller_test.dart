@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:petcare/core/errors/failure.dart';
 import 'package:petcare/features/appointments/presentation/providers/appointment_providers.dart';
 import 'package:petcare/features/authentication/presentation/providers/auth_providers.dart';
+import 'package:petcare/features/documents/presentation/providers/document_providers.dart';
 import 'package:petcare/features/medications/presentation/providers/medication_providers.dart';
 import 'package:petcare/features/pets/domain/entities/pet.dart';
 import 'package:petcare/features/pets/domain/entities/photo_change.dart';
@@ -13,6 +14,7 @@ import 'package:petcare/features/pets/presentation/providers/pet_providers.dart'
 import 'package:petcare/features/vaccinations/presentation/providers/vaccination_providers.dart';
 
 import '../../../helpers/fake_appointment_repository.dart';
+import '../../../helpers/fake_document_repository.dart';
 import '../../../helpers/fake_medication_repository.dart';
 import '../../../helpers/fake_pet_repository.dart';
 import '../../../helpers/fake_vaccination_repository.dart';
@@ -32,6 +34,7 @@ void main() {
       vaccinationRepositoryProvider.overrideWithValue(FakeVaccinationRepository()),
       appointmentRepositoryProvider.overrideWithValue(FakeAppointmentRepository()),
       medicationRepositoryProvider.overrideWithValue(FakeMedicationRepository()),
+      documentRepositoryProvider.overrideWithValue(FakeDocumentRepository()),
       currentUserIdProvider.overrideWithValue(uid),
     ]);
     c.listen(petEditorControllerProvider, (_, next) => states.add(next));
