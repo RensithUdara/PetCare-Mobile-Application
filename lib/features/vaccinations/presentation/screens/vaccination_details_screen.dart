@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/utils/clock.dart';
+import '../../../../core/widgets/app_dialogs.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../documents/presentation/widgets/document_widgets.dart';
 import '../../domain/entities/vaccination.dart';
@@ -25,12 +27,12 @@ class VaccinationDetailsScreen extends ConsumerWidget {
     return ref.watch(vaccinationProvider(vaccinationId)).when(
           loading: () => const Scaffold(body: LoadingView()),
           error: (_, _) => Scaffold(
-            appBar: AppBar(),
+            appBar: const BrandAppBar.page(title: 'Vaccination'),
             body: const ErrorView(message: 'Could not load this vaccination.'),
           ),
           data: (v) => v == null
               ? Scaffold(
-                  appBar: AppBar(),
+                  appBar: const BrandAppBar.page(title: 'Vaccination'),
                   body: const EmptyState(
                     icon: Icons.search_off,
                     title: 'Record not found',
@@ -48,33 +50,23 @@ class _Details extends ConsumerWidget {
   final Vaccination vaccination;
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete vaccination?'),
-        content: Text('This removes the ${vaccination.vaccineName} record permanently.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              minimumSize: const Size(0, 40),
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
-            ),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      title: 'Delete vaccination?',
+      message: 'This removes the ${vaccination.vaccineName} record permanently.',
+      confirmLabel: 'Delete',
+      icon: Icons.delete_outline_rounded,
+      destructive: true,
     );
-    if (confirmed != true || !context.mounted) return;
+    if (!confirmed || !context.mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
+    final navContext = Navigator.of(context, rootNavigator: true).context;
     final controller = ref.read(vaccinationEditorControllerProvider.notifier);
     if (await controller.delete(vaccination.id)) {
       router.pop();
-      messenger.showSnackBar(SnackBar(content: Text('${vaccination.vaccineName} deleted')));
+      if (navContext.mounted) await showSuccessDialog(navContext, title: '${vaccination.vaccineName} deleted');
     } else {
       final error = ref.read(vaccinationEditorControllerProvider).error;
       messenger.showSnackBar(SnackBar(
@@ -122,8 +114,8 @@ class _Details extends ConsumerWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Vaccination'),
+      appBar: BrandAppBar.page(
+        title: 'Vaccination',
         actions: [
           IconButton(
             tooltip: 'Edit',

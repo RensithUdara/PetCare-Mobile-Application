@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/utils/clock.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../pets/presentation/providers/pet_providers.dart';
 import '../../domain/entities/vaccination_overview.dart';
@@ -30,8 +31,8 @@ class VaccinationsScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(petName == null ? 'Vaccinations' : '$petName’s Vaccinations'),
+        appBar: BrandAppBar.page(
+          title: petName == null ? 'Vaccinations' : '$petName’s Vaccinations',
           bottom: hasRecords
               ? const TabBar(tabs: [Tab(text: 'Current'), Tab(text: 'History')])
               : null,

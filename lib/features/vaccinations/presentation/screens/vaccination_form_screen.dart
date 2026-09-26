@@ -7,6 +7,8 @@ import '../../../../core/domain/reminder_offset.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/utils/clock.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/widgets/app_dialogs.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/date_field.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../core/widgets/suggestion_field.dart';
@@ -40,7 +42,7 @@ class VaccinationFormScreen extends ConsumerWidget {
               const Scaffold(body: ErrorView(message: 'Could not load this vaccination.')),
           data: (v) => v == null
               ? Scaffold(
-                  appBar: AppBar(),
+                  appBar: const BrandAppBar.page(title: 'Vaccination'),
                   body: const EmptyState(icon: Icons.search_off, title: 'Record not found'),
                 )
               : _VaccinationForm(petId: v.petId, species: speciesOf(v.petId), initial: v),
@@ -142,10 +144,14 @@ class _VaccinationFormState extends ConsumerState<_VaccinationForm> {
     final id = await ref.read(vaccinationEditorControllerProvider.notifier).save(vaccination);
     if (id == null || !mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${vaccination.vaccineName} ${_isEditing ? 'updated' : 'added'}')),
+    await showSuccessDialog(
+      context,
+      title: '${vaccination.vaccineName} ${_isEditing ? 'updated' : 'added'}',
+      message: vaccination.nextDueDate == null
+          ? null
+          : 'Next dose due ${DateFormat.yMMMd().format(vaccination.nextDueDate!)}.',
     );
-    context.pop();
+    if (mounted) context.pop();
   }
 
   @override
@@ -165,7 +171,7 @@ class _VaccinationFormState extends ConsumerState<_VaccinationForm> {
     const gap = SizedBox(height: 16);
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? 'Edit Vaccination' : 'Add Vaccination')),
+      appBar: BrandAppBar.page(title: _isEditing ? 'Edit Vaccination' : 'Add Vaccination'),
       body: AbsorbPointer(
         absorbing: busy,
         child: Form(
