@@ -37,6 +37,8 @@ void main() {
     await tester.pump();
     await tester.enterText(find.widgetWithText(TextFormField, 'Dr. '), 'Dr. Nimali Perera');
     await tester.tap(find.text('Surgery'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 300));
     await expectLater(find.byType(MaterialApp), matchesGoldenFile('vet.png'));
   });
