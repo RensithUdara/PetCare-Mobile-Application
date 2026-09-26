@@ -2,7 +2,20 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 
-enum StatusTone { success, warning, danger, info }
+enum StatusTone { success, warning, danger, info, neutral }
+
+extension StatusToneColor on StatusTone {
+  Color colorOf(BuildContext context) {
+    final colors = StatusColors.of(context);
+    return switch (this) {
+      StatusTone.success => colors.success,
+      StatusTone.warning => colors.warning,
+      StatusTone.danger => colors.danger,
+      StatusTone.info => colors.info,
+      StatusTone.neutral => Theme.of(context).colorScheme.onSurfaceVariant,
+    };
+  }
+}
 
 /// Small pill used for statuses like "Up to date", "Upcoming", "Overdue".
 class StatusBadge extends StatelessWidget {
@@ -13,13 +26,7 @@ class StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = StatusColors.of(context);
-    final color = switch (tone) {
-      StatusTone.success => colors.success,
-      StatusTone.warning => colors.warning,
-      StatusTone.danger => colors.danger,
-      StatusTone.info => colors.info,
-    };
+    final color = tone.colorOf(context);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
