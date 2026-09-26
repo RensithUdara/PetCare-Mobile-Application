@@ -49,6 +49,10 @@
     "cleanUrls": true,
     "rewrites": [
       {
+        "source": "/app/**",
+        "destination": "/app/index.html"
+      },
+      {
         "source": "/p/**",
         "destination": "/p.html"
       }
@@ -75,7 +79,20 @@
             "value": "noindex"
           }
         ]
+      },
+      {
+        "source": "/app/assets/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
       }
+    ],
+    "predeploy": [
+      "npm --prefix web ci",
+      "npm --prefix web run build"
     ]
   },
   "emulators": {
