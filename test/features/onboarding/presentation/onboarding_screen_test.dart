@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:petcare/core/storage/shared_preferences_provider.dart';
-import 'package:petcare/features/onboarding/data/onboarding_controller.dart';
-import 'package:petcare/features/onboarding/presentation/onboarding_screen.dart';
+import 'package:petcare/features/onboarding/presentation/providers/onboarding_controller.dart';
+import 'package:petcare/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

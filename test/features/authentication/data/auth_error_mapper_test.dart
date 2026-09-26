@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:petcare/features/authentication/data/auth_error_mapper.dart';
+import 'package:petcare/features/authentication/data/mappers/auth_error_mapper.dart';
 
 void main() {
   test('credential errors share one message to avoid account enumeration', () {

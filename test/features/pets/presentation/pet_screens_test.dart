@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:petcare/features/authentication/presentation/auth_providers.dart';
-import 'package:petcare/features/pets/domain/pet.dart';
-import 'package:petcare/features/pets/presentation/pet_form_screen.dart';
-import 'package:petcare/features/pets/presentation/pet_providers.dart';
-import 'package:petcare/features/pets/presentation/pets_screen.dart';
+import 'package:petcare/features/authentication/presentation/providers/auth_providers.dart';
+import 'package:petcare/features/pets/domain/entities/pet.dart';
+import 'package:petcare/features/pets/presentation/screens/pet_form_screen.dart';
+import 'package:petcare/features/pets/presentation/providers/pet_providers.dart';
+import 'package:petcare/features/pets/presentation/screens/pets_screen.dart';
 
-import '../../helpers/fake_pet_repository.dart';
+import '../../../helpers/fake_pet_repository.dart';
 
 void main() {
   /// Hosts [screen] at `/screen` above a `/` page, with pet details

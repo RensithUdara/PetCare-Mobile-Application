@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:petcare/core/errors/failure.dart';
-import 'package:petcare/features/authentication/presentation/auth_controller.dart';
-import 'package:petcare/features/authentication/presentation/auth_providers.dart';
+import 'package:petcare/features/authentication/presentation/controllers/auth_controller.dart';
+import 'package:petcare/features/authentication/presentation/providers/auth_providers.dart';
 
-import '../../helpers/fake_auth_repository.dart';
+import '../../../helpers/fake_auth_repository.dart';
 
 void main() {
   late FakeAuthRepository repo;

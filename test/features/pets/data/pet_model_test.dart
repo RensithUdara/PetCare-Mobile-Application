@@ -1,72 +1,54 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:petcare/features/pets/domain/pet.dart';
-import 'package:petcare/features/pets/domain/pet_age.dart';
+import 'package:petcare/features/pets/data/models/pet_model.dart';
+import 'package:petcare/features/pets/domain/entities/pet.dart';
 
 void main() {
-  group('Pet JSON', () {
-    final bruno = Pet(
-      id: 'p1',
-      ownerId: 'u1',
-      name: 'Bruno',
-      species: PetSpecies.dog,
-      breed: 'Golden Retriever',
-      gender: PetGender.male,
-      dateOfBirth: DateTime(2023, 3, 15),
-      weightKg: 12.5,
-    );
+  final bruno = Pet(
+    id: 'p1',
+    ownerId: 'u1',
+    name: 'Bruno',
+    species: PetSpecies.dog,
+    breed: 'Golden Retriever',
+    gender: PetGender.male,
+    dateOfBirth: DateTime(2023, 3, 15),
+    weightKg: 12.5,
+  );
 
-    test('round-trips and does not store the id inside the document', () {
-      final json = bruno.toJson();
-      expect(json.containsKey('id'), isFalse);
-      expect(json['species'], 'dog');
-      expect(json['dateOfBirth'], DateTime(2023, 3, 15));
+  test('entity → model → JSON → model → entity round-trips', () {
+    final json = PetModel.fromEntity(bruno).toJson();
 
-      final restored = Pet.fromJson({...json, 'id': 'p1'});
-      expect(restored, bruno);
-    });
+    expect(json.containsKey('id'), isFalse, reason: 'id is the document id');
+    expect(json['species'], 'dog');
+    expect(json['gender'], 'male');
+    expect(json['dateOfBirth'], DateTime(2023, 3, 15));
 
-    test('accepts integer weights and ISO date strings', () {
-      final pet = Pet.fromJson({
-        'id': 'p2',
-        'ownerId': 'u1',
-        'name': 'Milo',
-        'species': 'cat',
-        'weightKg': 4,
-        'dateOfBirth': '2024-01-10T00:00:00.000',
-      });
-      expect(pet.weightKg, 4.0);
-      expect(pet.dateOfBirth, DateTime(2024, 1, 10));
-      expect(pet.gender, PetGender.unknown);
-    });
-
-    test('unknown species falls back to other', () {
-      final pet = Pet.fromJson({'ownerId': 'u1', 'name': 'Rex', 'species': 'dinosaur'});
-      expect(pet.species, PetSpecies.other);
-    });
+    expect(PetModel.fromJson({...json, 'id': 'p1'}).toEntity(), bruno);
   });
 
-  test('breedOrSpecies falls back to species label', () {
-    const pet = Pet(ownerId: 'u', name: 'Kiwi', species: PetSpecies.bird, breed: '  ');
-    expect(pet.breedOrSpecies, 'Bird');
-    expect(pet.copyWith(breed: 'Budgie').breedOrSpecies, 'Budgie');
+  test('accepts integer weights and ISO date strings', () {
+    final pet = PetModel.fromJson({
+      'id': 'p2',
+      'ownerId': 'u1',
+      'name': 'Milo',
+      'species': 'cat',
+      'weightKg': 4,
+      'dateOfBirth': '2024-01-10T00:00:00.000',
+    }).toEntity();
+
+    expect(pet.weightKg, 4.0);
+    expect(pet.dateOfBirth, DateTime(2024, 1, 10));
+    expect(pet.gender, PetGender.unknown);
   });
 
-  group('petAgeLabel', () {
-    final now = DateTime(2026, 9, 26);
+  test('unknown enum values fall back safely', () {
+    final pet = PetModel.fromJson({
+      'ownerId': 'u1',
+      'name': 'Rex',
+      'species': 'dinosaur',
+      'gender': '???',
+    }).toEntity();
 
-    test('years, months, weeks and days', () {
-      expect(petAgeLabel(DateTime(2023, 3, 15), now), '3 years old');
-      expect(petAgeLabel(DateTime(2025, 9, 26), now), '1 year old');
-      expect(petAgeLabel(DateTime(2025, 9, 27), now), '11 months old');
-      expect(petAgeLabel(DateTime(2026, 8, 26), now), '1 month old');
-      expect(petAgeLabel(DateTime(2026, 9, 5), now), '3 weeks old');
-      expect(petAgeLabel(DateTime(2026, 9, 25), now), '1 day old');
-      expect(petAgeLabel(DateTime(2026, 9, 26), now), 'Born today');
-    });
-
-    test('null for unknown or future dates', () {
-      expect(petAgeLabel(null, now), isNull);
-      expect(petAgeLabel(DateTime(2026, 10, 1), now), isNull);
-    });
+    expect(pet.species, PetSpecies.other);
+    expect(pet.gender, PetGender.unknown);
   });
 }

@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:petcare/core/errors/failure.dart';
-import 'package:petcare/features/authentication/presentation/auth_providers.dart';
-import 'package:petcare/features/authentication/presentation/forgot_password_screen.dart';
-import 'package:petcare/features/authentication/presentation/login_screen.dart';
-import 'package:petcare/features/authentication/presentation/register_screen.dart';
+import 'package:petcare/features/authentication/presentation/providers/auth_providers.dart';
+import 'package:petcare/features/authentication/presentation/screens/forgot_password_screen.dart';
+import 'package:petcare/features/authentication/presentation/screens/login_screen.dart';
+import 'package:petcare/features/authentication/presentation/screens/register_screen.dart';
 
-import '../../helpers/fake_auth_repository.dart';
+import '../../../helpers/fake_auth_repository.dart';
 
 void main() {
   late FakeAuthRepository repo;

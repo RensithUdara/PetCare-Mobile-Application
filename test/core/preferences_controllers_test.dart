@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:petcare/core/storage/shared_preferences_provider.dart';
 import 'package:petcare/core/theme/theme_mode_controller.dart';
-import 'package:petcare/features/onboarding/data/onboarding_controller.dart';
+import 'package:petcare/features/onboarding/presentation/providers/onboarding_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<(ProviderContainer, SharedPreferences)> _container(
