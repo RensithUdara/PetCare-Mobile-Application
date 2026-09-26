@@ -6,5 +6,19 @@ service cloud.firestore {
     match /users/{userId}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+
+    // Emergency profiles behind pet QR codes: world-readable, owner-writable.
+    // Only fields the owner chose to share are ever written here.
+    match /publicProfiles/{publicId} {
+      allow read: if true;
+      allow create: if request.auth != null
+                    && request.resource.data.ownerId == request.auth.uid
+                    && request.resource.data.publicId == publicId;
+      allow update: if request.auth != null
+                    && resource.data.ownerId == request.auth.uid
+                    && request.resource.data.ownerId == request.auth.uid;
+      allow delete: if request.auth != null
+                    && (resource == null || resource.data.ownerId == request.auth.uid);
+    }
   }
 }
