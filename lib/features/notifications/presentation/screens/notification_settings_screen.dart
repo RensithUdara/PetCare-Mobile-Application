@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/modern_widgets.dart';
 import '../../domain/entities/reminder.dart';
 import '../../domain/logic/reminder_planner.dart';
@@ -38,7 +39,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifications')),
+      appBar: const BrandAppBar.page(title: 'Notifications'),
       body: ListView(
         padding: const EdgeInsets.all(AppConstants.pagePadding),
         children: [

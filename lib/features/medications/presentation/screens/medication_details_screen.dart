@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/utils/clock.dart';
+import '../../../../core/widgets/app_dialogs.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../../pets/presentation/providers/pet_providers.dart';
@@ -25,12 +27,12 @@ class MedicationDetailsScreen extends ConsumerWidget {
     return ref.watch(medicationProvider(medicationId)).when(
           loading: () => const Scaffold(body: LoadingView()),
           error: (_, _) => Scaffold(
-            appBar: AppBar(),
+            appBar: const BrandAppBar.page(title: 'Medication'),
             body: const ErrorView(message: 'Could not load this medication.'),
           ),
           data: (m) => m == null
               ? Scaffold(
-                  appBar: AppBar(),
+                  appBar: const BrandAppBar.page(title: 'Medication'),
                   body: const EmptyState(
                     icon: Icons.search_off,
                     title: 'Medication not found',
@@ -48,29 +50,16 @@ class _Details extends ConsumerWidget {
   final Medication medication;
 
   Future<bool> _confirm(BuildContext context, String title, String message, String action) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        final scheme = Theme.of(context).colorScheme;
-        return AlertDialog(
-          title: Text(title),
-          content: Text(message),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Back')),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(0, 40),
-                backgroundColor: scheme.error,
-                foregroundColor: scheme.onError,
-              ),
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(action),
-            ),
-          ],
-        );
-      },
+    final result = await showConfirmDialog(
+      context,
+      title: title,
+      message: message,
+      confirmLabel: action,
+      cancelLabel: 'Back',
+      icon: action == 'Stop' ? Icons.stop_circle_outlined : Icons.delete_outline_rounded,
+      destructive: true,
     );
-    return result ?? false;
+    return result;
   }
 
   void _showError(BuildContext context, WidgetRef ref, String fallback) {
@@ -105,10 +94,16 @@ class _Details extends ConsumerWidget {
     }
     if (!context.mounted) return;
     final router = GoRouter.of(context);
-    final messenger = ScaffoldMessenger.of(context);
+    final navContext = Navigator.of(context, rootNavigator: true).context;
     if (await ref.read(medicationEditorControllerProvider.notifier).delete(medication.id)) {
       router.pop();
-      messenger.showSnackBar(SnackBar(content: Text('${medication.name} deleted')));
+      if (navContext.mounted) {
+        await showSuccessDialog(
+          navContext,
+          title: '${medication.name} deleted',
+          message: 'Its schedule and reminders were removed.',
+        );
+      }
     } else if (context.mounted) {
       _showError(context, ref, 'Could not delete medication.');
     }
@@ -141,8 +136,8 @@ class _Details extends ConsumerWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Medication'),
+      appBar: BrandAppBar.page(
+        title: 'Medication',
         actions: [
           IconButton(
             tooltip: 'Edit',

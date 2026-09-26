@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/utils/clock.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/widgets/app_dialogs.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/date_field.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../core/widgets/suggestion_field.dart';
@@ -32,7 +34,7 @@ class MedicationFormScreen extends ConsumerWidget {
               const Scaffold(body: ErrorView(message: 'Could not load this medication.')),
           data: (m) => m == null
               ? Scaffold(
-                  appBar: AppBar(),
+                  appBar: const BrandAppBar.page(title: 'Medication'),
                   body: const EmptyState(icon: Icons.search_off, title: 'Medication not found'),
                 )
               : _MedicationForm(initial: m, petId: m.petId),
@@ -142,10 +144,11 @@ class _MedicationFormState extends ConsumerState<_MedicationForm> {
 
     final id = await ref.read(medicationEditorControllerProvider.notifier).save(medication);
     if (id == null || !mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${medication.name.trim()} ${_isEditing ? 'updated' : 'added'}')),
+    await showSuccessDialog(
+      context,
+      title: '${medication.name.trim()} ${_isEditing ? 'updated' : 'added'}',
     );
-    context.pop();
+    if (mounted) context.pop();
   }
 
   @override
@@ -164,7 +167,7 @@ class _MedicationFormState extends ConsumerState<_MedicationForm> {
     const gap = SizedBox(height: 16);
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? 'Edit Medication' : 'Add Medication')),
+      appBar: BrandAppBar.page(title: _isEditing ? 'Edit Medication' : 'Add Medication'),
       body: AbsorbPointer(
         absorbing: busy,
         child: Form(

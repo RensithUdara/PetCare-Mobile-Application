@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/utils/clock.dart';
+import '../../../../core/widgets/brand_app_bar.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../pets/presentation/providers/pet_providers.dart';
 import '../../domain/entities/medication_overview.dart';
@@ -24,7 +25,7 @@ class MedicationsScreen extends ConsumerWidget {
     void add() => context.push(AppRoutes.medicationNew(petId));
 
     return Scaffold(
-      appBar: AppBar(title: Text(petName == null ? 'Medications' : '$petName’s Medications')),
+      appBar: BrandAppBar.page(title: petName == null ? 'Medications' : '$petName’s Medications'),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: add,
         icon: const Icon(Icons.add),
