@@ -12,7 +12,10 @@
     "test:rules": "firebase emulators:exec --only firestore --project demo-petcare-rules \"npm run test:rules:run\"",
     "test": "vitest run",
     "test:e2e:run": "vitest run -c vitest.e2e.config.ts",
-    "test:e2e": "firebase emulators:exec --only auth,firestore,functions --project demo-petcare \"npm run test:e2e:run\""
+    "test:e2e": "firebase emulators:exec --only auth,firestore,functions --project demo-petcare \"npm run test:e2e:run\"",
+    "seed": "node scripts/seed-emulators.mjs",
+    "emulators": "firebase emulators:start --only auth,firestore,functions --project demo-petcare",
+    "dev:local": "vite --mode emulators"
   },
   "dependencies": {
     "clsx": "^2.1.1",
