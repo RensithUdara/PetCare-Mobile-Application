@@ -105,7 +105,7 @@ lib/
 - Presentation talks to the domain **only through use cases**, never repositories directly.
 - Repositories throw `Failure` (user-presentable message); SDK exceptions never leave `data`.
 - Time-dependent logic takes a clock (`clockProvider`) so it is testable.
-- Features that aggregate others (e.g. **calendar**) depend on their *domain* repositories and
+- Features that aggregate others (**calendar**, **home dashboard**) depend on their *domain* repositories and
   logic, combining streams with the pure `combineLatest` helper.
 
 ### Navigation
@@ -123,7 +123,8 @@ lib/
 - [x] Phase 4 — vaccinations (records, status, reminders config, history timeline)
 - [x] Phase 5 — appointments (schedule, complete, cancel, history) and calendar
 - [x] Phase 6 — medications (dosage, frequency, course dates, dose times, stop) + calendar doses
-- [ ] Phase 7+ — dashboard, notifications, documents, …
+- [x] Phase 7 — home dashboard (alerts, pet summaries, today's doses, upcoming, recent activity)
+- [ ] Phase 8+ — notifications, documents, …
 
 ## Tests
 
