@@ -79,9 +79,8 @@ void main() {
 
       await tester.enterText(field('Medicine name *'), 'Vitamin Supplement');
       await tester.tap(find.widgetWithText(ActionChip, '1 tablet'));
-      await tester.tap(find.byType(DropdownButtonFormField<MedicationFrequency>));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Twice daily').last);
+      await tester.ensureVisible(find.text('Twice daily'));
+      await tester.tap(find.text('Twice daily'));
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(ActionChip, '30 days'));
       await tester.pump();
