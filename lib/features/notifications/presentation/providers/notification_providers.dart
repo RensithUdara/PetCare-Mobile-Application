@@ -24,7 +24,6 @@ import '../../domain/usecases/clear_reminders.dart';
 import '../../domain/usecases/notification_settings_usecases.dart';
 import '../../domain/usecases/push_device_usecases.dart';
 import '../../domain/usecases/request_notification_permission.dart';
-import '../../domain/usecases/show_test_notification.dart';
 import '../../domain/usecases/watch_reminder_plan.dart';
 
 // ── Data ────────────────────────────────────────────────────────────────
@@ -64,8 +63,6 @@ final requestNotificationPermissionProvider = Provider(
     ref.watch(pushMessagingRepositoryProvider),
   ),
 );
-final showTestNotificationProvider =
-    Provider((ref) => ShowTestNotification(ref.watch(reminderSchedulerProvider)));
 final getNotificationSettingsProvider =
     Provider((ref) => GetNotificationSettings(ref.watch(notificationSettingsRepositoryProvider)));
 final saveNotificationSettingsProvider =
