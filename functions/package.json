@@ -6,8 +6,8 @@
     "node": "22"
   },
   "scripts": {
-    "build": "tsc",
-    "build:watch": "tsc --watch",
+    "build": "node init && tsc",
+    "build:watch": "node init && tsc --watch",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
     "test": "npm run build && node --test lib/admin.test.js"

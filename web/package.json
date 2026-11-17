@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "build:firebase": "tsc -b && vite build --mode production",
-    "build:vercel": "tsc -b && vite build --mode vercel",
+    "dev": "node init && vite",
+    "build": "node init && tsc -b && vite build",
+    "build:firebase": "node init && tsc -b && vite build --mode production",
+    "build:vercel": "node init && tsc -b && vite build --mode vercel",
     "lint": "eslint .",
     "preview": "vite preview",
     "test:rules:run": "vitest run -c vitest.rules.config.ts",
@@ -17,7 +17,7 @@
     "test:e2e": "firebase emulators:exec --only auth,firestore,functions --project demo-petcare \"npm run test:e2e:run\"",
     "seed": "node scripts/seed-emulators.mjs",
     "emulators": "firebase emulators:start --only auth,firestore,functions --project demo-petcare",
-    "dev:local": "vite --mode emulators"
+    "dev:local": "node init && vite --mode emulators"
   },
   "dependencies": {
     "clsx": "^2.1.1",
